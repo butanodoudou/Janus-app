@@ -17,7 +17,7 @@ export default function SubmitForm({ onBack }) {
   }
 
   function next() {
-    if (step === 0 && !form.text.trim()) return setError('Écris ton dilemme.')
+    if (step === 0 && !form.text.trim()) return setError('Écris ton dlemm.')
     if (step === 1 && (!form.option_a.trim() || !form.option_b.trim())) return setError('Les deux options sont requises.')
     if (step === 2 && !form.category) return setError('Choisis une catégorie.')
     setStep(s => s + 1)
@@ -44,7 +44,7 @@ export default function SubmitForm({ onBack }) {
     return (
       <div style={styles.done}>
         <div style={styles.doneEmoji}>🙌</div>
-        <h2 style={styles.doneTitle}>Dilemme soumis !</h2>
+        <h2 style={styles.doneTitle}>Dlemm soumis !</h2>
         <p style={styles.doneText}>Il sera examiné avant d'apparaître dans le feed.</p>
         <button style={styles.backBtn} onClick={onBack}>Retour au feed</button>
       </div>
@@ -73,7 +73,7 @@ export default function SubmitForm({ onBack }) {
       <div style={styles.content}>
         {step === 0 && (
           <>
-            <label style={styles.label}>Ton dilemme</label>
+            <label style={styles.label}>Ton dlemm</label>
             <p style={styles.hint}>Une situation difficile sans bonne réponse évidente.</p>
             <textarea
               style={styles.textarea}
@@ -120,7 +120,7 @@ export default function SubmitForm({ onBack }) {
         {step === 2 && (
           <>
             <label style={styles.label}>Catégorie</label>
-            <p style={styles.hint}>Quel thème correspond le mieux à ton dilemme ?</p>
+            <p style={styles.hint}>Quel thème correspond le mieux à ton dlemm ?</p>
             <div style={styles.categories}>
               {Object.entries(CATEGORIES).map(([key, cat]) => (
                 <button
@@ -141,7 +141,7 @@ export default function SubmitForm({ onBack }) {
 
         {step === 3 && (
           <>
-            <label style={styles.label}>Confirme ton dilemme</label>
+            <label style={styles.label}>Confirme ton dlemm</label>
             <div style={styles.preview}>
               <div style={{
                 ...styles.previewBadge,

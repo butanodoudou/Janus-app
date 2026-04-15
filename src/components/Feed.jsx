@@ -54,7 +54,7 @@ export default function Feed() {
     return (
       <div style={styles.center}>
         <p style={styles.emptyEmoji}>🎉</p>
-        <p style={styles.emptyTitle}>Tous les dilemmes répondus !</p>
+        <p style={styles.emptyTitle}>Tous les dlemms répondus !</p>
         <p style={styles.emptyText}>Reviens bientôt pour de nouvelles questions.</p>
       </div>
     )

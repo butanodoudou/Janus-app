@@ -29,10 +29,10 @@ export default function DailyLimitScreen() {
     <div style={styles.container}>
       <div style={styles.emoji}>⏳</div>
       <h2 style={styles.title}>C'est tout pour aujourd'hui</h2>
-      <p style={styles.subtitle}>Tu as répondu à tes 5 dilemmes du jour.</p>
+      <p style={styles.subtitle}>Tu as répondu à tes 5 dlemms du jour.</p>
 
       <div style={styles.countdown}>
-        <p style={styles.countdownLabel}>Prochain dilemme dans</p>
+        <p style={styles.countdownLabel}>Prochain dlemm dans</p>
         <p style={styles.countdownTime}>{formatCountdown(remaining)}</p>
       </div>
 

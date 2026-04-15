@@ -73,7 +73,7 @@ export default function Profile() {
       <h2 style={styles.heading}>Mon profil</h2>
 
       <div style={styles.cards}>
-        <StatCard label="Dilemmes répondus" value={stats.total} accent="#7F77DD" />
+        <StatCard label="Dlemms répondus" value={stats.total} accent="#7F77DD" />
         <StatCard label="Aujourd'hui" value={stats.todayCount} accent="#D4537E" />
         {stats.limitActive && (
           <StatCard
