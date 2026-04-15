@@ -128,9 +128,72 @@ src/
 - Auth email / Google (Supabase Auth)
 - Vrais % en temps réel (Supabase Realtime)
 - Carte de partage générée côté serveur (Satori + Sharp)
-- Système de streak et gamification
 - Questions sponsorisées
-- Faire apparaître les soumissions approuvées dans le feed
+- ~~Faire apparaître les soumissions approuvées dans le feed~~ ✅ Fait
+
+---
+
+## À discuter — Gamification
+
+### Objectif
+Donner envie de revenir, de progresser, de se comparer — sans trahir l'esprit brut et clivant du jeu.
+
+### Pistes à explorer
+
+**Streaks**
+- Flamme si l'utilisateur répond au moins 1 dlemm par jour
+- Récompense visuelle (badge, animation) aux paliers : 3j, 7j, 30j
+- Question : faut-il pénaliser la perte de streak ou juste montrer le record ?
+
+**Niveaux / titres**
+- Basés sur le nombre total de dlemms répondus
+- Ex : Novice → Penseur → Philosophe → Oracle
+- S'affichent dans le profil, peut-être sur la card de partage
+
+**Badges de personnalité**
+- Analysés à partir des choix : si l'utilisateur vote souvent contre la majorité → badge "Rebelle"
+- Si toujours avec la majorité → "Consensuel"
+- Si ses choix sont imprévisibles → "Imprévisible"
+- Fort potentiel viral (partageable)
+
+**Classements**
+- Leaderboard anonyme par nombre de dlemms répondus
+- Ou par catégorie : "Top votants Moral cette semaine"
+- Question : est-ce que ça colle avec l'anonymat actuel ?
+
+**Dlemm du jour**
+- Une question mise en avant chaque jour, identique pour tous
+- Crée un moment collectif, booste l'engagement matinal
+- Nécessite une colonne `featured_date` dans la table
+
+---
+
+## À discuter — Réactions & Commentaires
+
+### Objectif
+Permettre à l'utilisateur de réagir aux résultats — notamment quand les % sont surprenants ou choquants — sans créer un système de commentaires lourd à modérer.
+
+### Option A — Réactions rapides (émojis)
+Post-vote, l'utilisateur choisit une réaction parmi 4-5 :
+- 😱 Choqué · 🤔 Mitigé · 😈 J'assume · 🫶 Je comprends · 🤯 Incroyable
+- Affiché en agrégat sous les % ("32% 😱 · 18% 😈")
+- Simple, rapide, pas de modération
+- **Table à créer :** `reactions` (user_id, question_id, emoji, created_at)
+
+### Option B — Commentaires courts
+- Texte limité à 140 caractères, anonyme
+- Affiché sous les résultats, triés par votes ("utile")
+- Nécessite modération (+ agent IA ?)
+- **Table à créer :** `comments` (user_id, question_id, text, created_at)
+
+### Option C — Les deux
+- Réactions toujours visibles (pas de modération)
+- Commentaires optionnels, cachés derrière un "Voir les réactions" pour ne pas alourdir la card
+
+### Questions ouvertes
+- Est-ce qu'on veut de l'anonymat total ou un pseudo ?
+- Modération : automatique (IA) ou manuelle ?
+- Les commentaires sont-ils visibles avant ou après avoir voté ?
 
 ---
 
