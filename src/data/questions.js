@@ -1,0 +1,81 @@
+export const CATEGORIES = {
+  moral:    { label: 'Moral',    color: '#7F77DD' },
+  amour:    { label: 'Amour',    color: '#D4537E' },
+  identite: { label: 'Identité', color: '#BA7517' },
+  societe:  { label: 'Société',  color: '#378ADD' },
+  travail:  { label: 'Travail',  color: '#1D9E75' },
+  vie:      { label: 'Vie',      color: '#0F6E56' },
+}
+
+export const QUESTIONS = [
+  {
+    id: 'q1',
+    category: 'moral',
+    text: "Tu as la possibilité d'appuyer sur un bouton.",
+    option_a: "Tu appuies : 1 personne meurt, mais 100 sont sauvées.",
+    option_b: "Tu n'appuies pas : les 100 personnes meurent.",
+  },
+  {
+    id: 'q2',
+    category: 'amour',
+    text: "En pleine nuit, deux situations se présentent à toi en même temps.",
+    option_a: "Tu sauves un inconnu qui se noie — ta relation prend fin.",
+    option_b: "Tu restes avec ton/ta partenaire — l'inconnu meurt.",
+  },
+  {
+    id: 'q3',
+    category: 'travail',
+    text: "Ton patron te fait une offre inattendue.",
+    option_a: "Ton salaire double — mais un collègue que tu apprécies est licencié.",
+    option_b: "Tu refuses : ton salaire reste le même, le collègue reste.",
+  },
+  {
+    id: 'q4',
+    category: 'identite',
+    text: "Une machine te propose un choix irréversible.",
+    option_a: "Recommencer ta vie à 18 ans avec tout ton vécu actuel.",
+    option_b: "Rester où tu en es — mais perdre tes 3 meilleurs amis pour toujours.",
+  },
+  {
+    id: 'q5',
+    category: 'societe',
+    text: "Un référendum mondial est organisé.",
+    option_a: "Surveillance totale de tous les citoyens — criminalité réduite de 80%.",
+    option_b: "Aucune surveillance — la criminalité reste à son niveau actuel.",
+  },
+  {
+    id: 'q6',
+    category: 'amour',
+    text: "L'amour se présente à toi sous deux formes.",
+    option_a: "Une relation parfaite pendant 3 ans, puis elle se termine définitivement.",
+    option_b: "Une relation imparfaite mais durable pour toute ta vie.",
+  },
+  {
+    id: 'q7',
+    category: 'moral',
+    text: "Tu dois faire un choix impossible entre deux vies.",
+    option_a: "Tu sauves ton propre enfant.",
+    option_b: "Tu sauves 5 enfants inconnus — le tien meurt.",
+  },
+  {
+    id: 'q8',
+    category: 'moral',
+    text: "Tu as une information sur un attentat imminent.",
+    option_a: "Tu empêches l'attentat — mais tu dois trahir quelqu'un que tu aimes.",
+    option_b: "Tu protèges la personne que tu aimes — l'attentat a lieu.",
+  },
+  {
+    id: 'q9',
+    category: 'moral',
+    text: "Tu es atteint d'une maladie grave. Un traitement unique existe.",
+    option_a: "Tu guéris complètement — mais un inconnu contracte ta maladie à ta place.",
+    option_b: "Tu refuses le traitement — l'inconnu reste sain, tu restes malade.",
+  },
+  {
+    id: 'q10',
+    category: 'identite',
+    text: "La justice commet une erreur irréparable.",
+    option_a: "Tu es innocent mais condamné à la prison à vie.",
+    option_b: "Tu es coupable mais libre — et tu le resteras toujours.",
+  },
+]
