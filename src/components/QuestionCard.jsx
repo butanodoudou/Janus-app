@@ -16,32 +16,32 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
 
   async function handleVote(choice) {
     if (voted || loading) return
-    setLoading(true)
+    setLoading(false)
 
-    const { error } = await supabase.from('votes').insert({
+    // Optimistic update — UI réagit immédiatement
+    setCounts(prev => ({ ...prev, [choice]: prev[choice] + 1 }))
+    setVoted(choice)
+    onVoted(question.id)
+
+    // Sync Supabase en arrière-plan
+    await supabase.from('votes').insert({
       user_id: userId,
       question_id: question.id,
       choice,
       date: TODAY,
     })
 
-    if (!error) {
-      const { data } = await supabase
-        .from('votes')
-        .select('choice')
-        .eq('question_id', question.id)
+    // Récupère les vrais compteurs
+    const { data } = await supabase
+      .from('votes')
+      .select('choice')
+      .eq('question_id', question.id)
 
-      if (data) {
-        const A = data.filter(v => v.choice === 'A').length
-        const B = data.filter(v => v.choice === 'B').length
-        setCounts({ A, B })
-      }
-
-      setVoted(choice)
-      onVoted(question.id)
+    if (data && data.length > 0) {
+      const A = data.filter(v => v.choice === 'A').length
+      const B = data.filter(v => v.choice === 'B').length
+      setCounts({ A, B })
     }
-
-    setLoading(false)
   }
 
   function handleShare() {
