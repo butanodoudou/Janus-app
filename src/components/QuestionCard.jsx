@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { CATEGORIES } from '../data/questions.js'
+import Comments from './Comments.jsx'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 
@@ -90,22 +91,30 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
 
       {voted && (
         <div style={styles.afterVote}>
-          <p style={styles.totalVotes}>
-            {total.toLocaleString('fr-FR')} vote{total > 1 ? 's' : ''}
-          </p>
           <div style={styles.actionRow}>
-            <button style={styles.shareBtn} onClick={handleShare}>
-              <ShareIcon />
-              Partager
-            </button>
-            <button
-              style={{ ...styles.nextBtn, background: category.color }}
-              onClick={onNext}
-            >
-              Suivant
-              <ChevronIcon />
-            </button>
+            <p style={styles.totalVotes}>
+              {total.toLocaleString('fr-FR')} personne{total > 1 ? 's' : ''} ont répondu
+            </p>
+            <div style={styles.actionBtns}>
+              <button style={styles.shareBtn} onClick={handleShare}>
+                <ShareIcon />
+                Partager
+              </button>
+              <button
+                style={{ ...styles.nextBtn, background: category.color }}
+                onClick={onNext}
+              >
+                Suivant
+                <ChevronIcon />
+              </button>
+            </div>
           </div>
+
+          <Comments
+            questionId={question.id}
+            userChoice={voted}
+            categoryColor={category.color}
+          />
         </div>
       )}
     </div>
@@ -268,7 +277,12 @@ const styles = {
   afterVote: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: '16px',
+  },
+  actionRow: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
   },
   totalVotes: {
     fontSize: '13px',
@@ -276,7 +290,7 @@ const styles = {
     fontWeight: 600,
     textAlign: 'center',
   },
-  actionRow: {
+  actionBtns: {
     display: 'flex',
     gap: '10px',
   },

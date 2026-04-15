@@ -9,19 +9,25 @@ const TOTAL_THRESHOLD = 30
 
 export default function Profile() {
   const [stats, setStats] = useState(null)
+  const [communityStats, setCommunityStats] = useState(null)
   const [history, setHistory] = useState([])
   const userId = getUserId()
 
   useEffect(() => {
     async function load() {
-      const { data } = await supabase
-        .from('votes')
-        .select('question_id, choice, date, created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+      const [userVotesRes, totalVotesRes] = await Promise.all([
+        supabase.from('votes').select('question_id, choice, date, created_at').eq('user_id', userId).order('created_at', { ascending: false }),
+        supabase.from('votes').select('user_id', { count: 'exact', head: false }),
+      ])
 
-      if (data) {
-        const total = data.length
+      // Compte les joueurs uniques
+      const uniqueUsers = new Set((totalVotesRes.data || []).map(v => v.user_id)).size
+      setCommunityStats({ totalVotes: totalVotesRes.count || 0, uniqueUsers })
+
+      const data = userVotesRes.data
+
+      if (data !== undefined) {
+        const total = (data || []).length
         const todayCount = data.filter(v => v.date === TODAY).length
         const limitActive = total >= TOTAL_THRESHOLD
         const remaining = limitActive ? Math.max(0, DAILY_LIMIT - todayCount) : null
@@ -71,6 +77,20 @@ export default function Profile() {
   return (
     <div style={styles.container}>
       <h2 style={styles.heading}>Mon profil</h2>
+
+      {communityStats && (
+        <div style={styles.community}>
+          <div style={styles.communityItem}>
+            <span style={styles.communityValue}>{communityStats.uniqueUsers.toLocaleString('fr-FR')}</span>
+            <span style={styles.communityLabel}>joueurs</span>
+          </div>
+          <div style={styles.communityDivider} />
+          <div style={styles.communityItem}>
+            <span style={styles.communityValue}>{communityStats.totalVotes.toLocaleString('fr-FR')}</span>
+            <span style={styles.communityLabel}>réponses au total</span>
+          </div>
+        </div>
+      )}
 
       <div style={{
         ...styles.cards,
@@ -343,6 +363,36 @@ const styles = {
     color: '#888',
     lineHeight: 1.4,
     fontStyle: 'italic',
+  },
+  community: {
+    display: 'flex',
+    background: '#fff',
+    borderRadius: '16px',
+    padding: '16px',
+    border: '1px solid #e5e5e5',
+    alignItems: 'center',
+  },
+  communityItem: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '2px',
+  },
+  communityValue: {
+    fontSize: '26px',
+    fontWeight: 800,
+    color: '#7F77DD',
+  },
+  communityLabel: {
+    fontSize: '12px',
+    color: '#aaa',
+    fontWeight: 600,
+  },
+  communityDivider: {
+    width: '1px',
+    height: '36px',
+    background: '#eee',
   },
   userId: {
     display: 'flex',
