@@ -11,6 +11,7 @@ const TOTAL_THRESHOLD = 30
 
 export default function Feed() {
   const [votedIds, setVotedIds] = useState(null)
+  const [allQuestions, setAllQuestions] = useState([])
   const [todayCount, setTodayCount] = useState(0)
   const [totalCount, setTotalCount] = useState(0)
   const [index, setIndex] = useState(0)
@@ -18,23 +19,34 @@ export default function Feed() {
   const userId = getUserId()
 
   useEffect(() => {
-    async function loadVotes() {
-      const { data } = await supabase
-        .from('votes')
-        .select('question_id, date')
-        .eq('user_id', userId)
+    async function load() {
+      // Charge votes et soumissions approuvées en parallèle
+      const [votesRes, submissionsRes] = await Promise.all([
+        supabase.from('votes').select('question_id, date').eq('user_id', userId),
+        supabase.from('submissions').select('id, category, text, option_a, option_b').eq('status', 'approved').order('created_at', { ascending: true }),
+      ])
 
-      if (data) {
-        const ids = new Set(data.map(v => v.question_id))
-        const today = data.filter(v => v.date === TODAY).length
-        setVotedIds(ids)
+      const ids = new Set()
+      let today = 0
+      if (votesRes.data) {
+        votesRes.data.forEach(v => ids.add(v.question_id))
+        today = votesRes.data.filter(v => v.date === TODAY).length
         setTodayCount(today)
-        setTotalCount(data.length)
-      } else {
-        setVotedIds(new Set())
+        setTotalCount(votesRes.data.length)
       }
+      setVotedIds(ids)
+
+      // Fusionne questions fixes + soumissions approuvées
+      const approved = (submissionsRes.data || []).map(s => ({
+        id: s.id,
+        category: s.category,
+        text: s.text || '',
+        option_a: s.option_a,
+        option_b: s.option_b,
+      }))
+      setAllQuestions([...QUESTIONS, ...approved])
     }
-    loadVotes()
+    load()
   }, [])
 
   if (votedIds === null) {
@@ -49,7 +61,7 @@ export default function Feed() {
   const limitActive = totalCount >= TOTAL_THRESHOLD && todayCount >= DAILY_LIMIT
   if (limitActive) return <DailyLimitScreen />
 
-  const queue = QUESTIONS.filter(q => !votedIds.has(q.id))
+  const queue = allQuestions.filter(q => !votedIds.has(q.id))
 
   if (queue.length === 0) {
     return (
@@ -71,11 +83,7 @@ export default function Feed() {
 
   function handleNext() {
     const nextIndex = index + 1
-    if (nextIndex >= queue.length - 1) {
-      setIndex(0)
-    } else {
-      setIndex(nextIndex)
-    }
+    setIndex(nextIndex >= queue.length - 1 ? 0 : nextIndex)
   }
 
   return (
