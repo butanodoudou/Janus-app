@@ -16,7 +16,12 @@ export default function Nav({ view, setView, adminUnlocked }) {
         return (
           <button
             key={tab.id}
-            style={{ ...styles.tab, color: active ? '#7F77DD' : '#999' }}
+            style={{
+              ...styles.tab,
+              color: active ? '#7F77DD' : '#999',
+              background: active ? 'rgba(127, 119, 221, 0.08)' : 'transparent',
+              borderRadius: active ? '12px' : '0',
+            }}
             onClick={() => setView(tab.id)}
           >
             <tab.icon active={active} />
@@ -75,9 +80,11 @@ const styles = {
     width: '100%',
     maxWidth: '430px',
     display: 'flex',
+    gap: '4px',
+    padding: '6px 8px',
     borderTop: '1px solid #eee',
     background: '#fafafa',
-    paddingBottom: 'env(safe-area-inset-bottom)',
+    paddingBottom: 'calc(6px + env(safe-area-inset-bottom))',
     zIndex: 100,
   },
   tab: {
@@ -86,15 +93,14 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     gap: '3px',
-    padding: '10px 0 8px',
-    background: 'none',
+    padding: '8px 0',
     border: 'none',
     cursor: 'pointer',
     fontFamily: 'inherit',
-    transition: 'color 0.15s',
+    transition: 'color 0.15s, background 0.15s',
   },
   label: {
-    fontSize: '11px',
-    fontWeight: 600,
+    fontSize: '12px',
+    fontWeight: 700,
   },
 }

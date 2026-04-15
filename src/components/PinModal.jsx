@@ -14,7 +14,8 @@ export default function PinModal({ onConfirm, onClose }) {
       const ok = onConfirm(next)
       if (!ok) {
         setError(true)
-        setTimeout(() => { setPin(''); setError(false) }, 600)
+        if (navigator.vibrate) navigator.vibrate(200)
+        setTimeout(() => { setPin(''); setError(false) }, 300)
       }
     }
   }
@@ -41,6 +42,7 @@ export default function PinModal({ onConfirm, onClose }) {
               style={{
                 ...styles.dot,
                 background: d.filled ? (d.error ? '#e53e3e' : '#7F77DD') : '#e0e0e0',
+                transform: d.filled ? 'scale(1.1)' : 'scale(1)',
               }}
             />
           ))}
@@ -99,7 +101,7 @@ const styles = {
     width: '14px',
     height: '14px',
     borderRadius: '50%',
-    transition: 'background 0.15s',
+    transition: 'background 0.15s, transform 0.15s',
   },
   grid: {
     display: 'grid',

@@ -72,12 +72,15 @@ export default function Profile() {
     <div style={styles.container}>
       <h2 style={styles.heading}>Mon profil</h2>
 
-      <div style={styles.cards}>
+      <div style={{
+        ...styles.cards,
+        gridTemplateColumns: stats.limitActive ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
+      }}>
         <StatCard label="Dlemms répondus" value={stats.total} accent="#7F77DD" />
         <StatCard label="Aujourd'hui" value={stats.todayCount} accent="#D4537E" />
         {stats.limitActive && (
           <StatCard
-            label="Restants aujourd'hui"
+            label="Restants"
             value={stats.remaining}
             accent="#1D9E75"
           />
@@ -115,10 +118,13 @@ export default function Profile() {
         </div>
       )}
 
-      <div style={styles.userId}>
+      <button
+        style={styles.userId}
+        onClick={() => navigator.clipboard?.writeText(userId)}
+      >
         <span style={styles.userIdLabel}>ID anonyme</span>
-        <span style={styles.userIdValue}>{userId.slice(0, 8)}…</span>
-      </div>
+        <span style={styles.userIdValue}>{userId.slice(0, 8)}… · Copier</span>
+      </button>
     </div>
   )
 }
@@ -137,8 +143,8 @@ function HistoryCard({ question, choice, counts }) {
     <div style={styles.historyCard}>
       <div style={styles.historyCardTop}>
         <span style={{ ...styles.badge, background: cat.color }}>{cat.label}</span>
-        <span style={{ ...styles.choiceBadge, background: cat.color }}>
-          Tu as choisi {choice}
+        <span style={{ ...styles.choiceLetter, color: cat.color }}>
+          Choix {choice}
         </span>
       </div>
 
@@ -214,7 +220,7 @@ const styles = {
     gap: '4px',
   },
   cardValue: {
-    fontSize: '36px',
+    fontSize: '28px',
     fontWeight: 800,
     lineHeight: 1,
   },
@@ -295,14 +301,6 @@ const styles = {
     fontSize: '11px',
     fontWeight: 700,
   },
-  choiceBadge: {
-    padding: '3px 10px',
-    borderRadius: '20px',
-    color: '#fff',
-    fontSize: '11px',
-    fontWeight: 700,
-    opacity: 0.75,
-  },
   historyQuestion: {
     fontSize: '14px',
     fontWeight: 700,
@@ -353,7 +351,11 @@ const styles = {
     padding: '12px 16px',
     background: '#fff',
     borderRadius: '12px',
-    border: '1px solid #eee',
+    border: '1px solid #e5e5e5',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    width: '100%',
+    textAlign: 'left',
   },
   userIdLabel: {
     fontSize: '13px',
@@ -361,8 +363,12 @@ const styles = {
     fontWeight: 500,
   },
   userIdValue: {
-    fontSize: '13px',
+    fontSize: '12px',
     color: '#aaa',
     fontFamily: 'monospace',
+  },
+  choiceLetter: {
+    fontSize: '13px',
+    fontWeight: 700,
   },
 }

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { CATEGORIES } from '../data/questions.js'
 
-const STEPS = ['question', 'options', 'category', 'confirm']
+const STEP_LABELS = ['Le dlemm', 'Les options', 'Catégorie', 'Confirmation']
 
 export default function SubmitForm({ onBack }) {
   const [step, setStep] = useState(0)
@@ -34,7 +34,7 @@ export default function SubmitForm({ onBack }) {
     })
     setSubmitting(false)
     if (err) {
-      setError('Erreur lors de l\'envoi. Réessaie.')
+      setError("Erreur lors de l'envoi. Réessaie.")
     } else {
       setDone(true)
     }
@@ -57,15 +57,25 @@ export default function SubmitForm({ onBack }) {
         <button style={styles.backLink} onClick={step === 0 ? onBack : () => setStep(s => s - 1)}>
           ← {step === 0 ? 'Feed' : 'Retour'}
         </button>
-        <div style={styles.steps}>
-          {STEPS.slice(0, -1).map((_, i) => (
-            <div
-              key={i}
-              style={{
-                ...styles.stepDot,
-                background: i <= step ? '#7F77DD' : '#ddd',
-              }}
-            />
+
+        {/* Step indicator numéroté */}
+        <div style={styles.stepIndicator}>
+          {STEP_LABELS.map((_, i) => (
+            <div key={i} style={styles.stepItem}>
+              <div style={{
+                ...styles.stepNum,
+                background: i < step ? '#7F77DD' : i === step ? '#7F77DD' : '#e5e5e5',
+                color: i <= step ? '#fff' : '#aaa',
+              }}>
+                {i < step ? '✓' : i + 1}
+              </div>
+              {i < STEP_LABELS.length - 1 && (
+                <div style={{
+                  ...styles.stepLine,
+                  background: i < step ? '#7F77DD' : '#e5e5e5',
+                }} />
+              )}
+            </div>
           ))}
         </div>
       </div>
@@ -84,7 +94,13 @@ export default function SubmitForm({ onBack }) {
               maxLength={200}
               autoFocus
             />
-            <p style={styles.counter}>{form.text.length}/200</p>
+            <p style={{
+              ...styles.counter,
+              color: form.text.length > 170 ? '#e53e3e' : '#ccc',
+              fontWeight: form.text.length > 170 ? 700 : 400,
+            }}>
+              {form.text.length}/200
+            </p>
           </>
         )}
 
@@ -129,6 +145,7 @@ export default function SubmitForm({ onBack }) {
                     ...styles.catBtn,
                     background: form.category === key ? cat.color : '#f4f4f4',
                     color: form.category === key ? '#fff' : '#444',
+                    border: form.category === key ? `2px solid ${cat.color}` : '2px solid transparent',
                   }}
                   onClick={() => update('category', key)}
                 >
@@ -159,16 +176,16 @@ export default function SubmitForm({ onBack }) {
                 <span style={styles.previewOptionText}>{form.option_b}</span>
               </div>
             </div>
+            <button style={styles.editBtn} onClick={() => setStep(0)}>
+              ← Modifier le dlemm
+            </button>
           </>
         )}
 
         {error && <p style={styles.error}>{error}</p>}
 
         <button
-          style={{
-            ...styles.nextBtn,
-            opacity: submitting ? 0.6 : 1,
-          }}
+          style={{ ...styles.nextBtn, opacity: submitting ? 0.6 : 1 }}
           onClick={step === 3 ? submit : next}
           disabled={submitting}
         >
@@ -202,14 +219,29 @@ const styles = {
     fontFamily: 'inherit',
     padding: 0,
   },
-  steps: {
+  stepIndicator: {
     display: 'flex',
-    gap: '6px',
+    alignItems: 'center',
+    gap: '0',
   },
-  stepDot: {
-    width: '8px',
-    height: '8px',
+  stepItem: {
+    display: 'flex',
+    alignItems: 'center',
+  },
+  stepNum: {
+    width: '24px',
+    height: '24px',
     borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '11px',
+    fontWeight: 700,
+    transition: 'background 0.2s, color 0.2s',
+  },
+  stepLine: {
+    width: '16px',
+    height: '2px',
     transition: 'background 0.2s',
   },
   content: {
@@ -233,7 +265,7 @@ const styles = {
     padding: '14px',
     fontSize: '16px',
     fontFamily: 'inherit',
-    border: '2px solid #e0e0e0',
+    border: '2px solid #e5e5e5',
     borderRadius: '12px',
     resize: 'none',
     outline: 'none',
@@ -244,9 +276,9 @@ const styles = {
   },
   counter: {
     fontSize: '12px',
-    color: '#ccc',
     textAlign: 'right',
     marginTop: '-8px',
+    transition: 'color 0.15s',
   },
   optionRow: {
     display: 'flex',
@@ -271,7 +303,7 @@ const styles = {
     padding: '12px',
     fontSize: '15px',
     fontFamily: 'inherit',
-    border: '2px solid #e0e0e0',
+    border: '2px solid #e5e5e5',
     borderRadius: '12px',
     resize: 'none',
     outline: 'none',
@@ -280,20 +312,20 @@ const styles = {
     lineHeight: 1.5,
   },
   categories: {
-    display: 'flex',
-    flexWrap: 'wrap',
+    display: 'grid',
+    gridTemplateColumns: 'repeat(2, 1fr)',
     gap: '10px',
     marginTop: '4px',
   },
   catBtn: {
-    padding: '10px 18px',
-    borderRadius: '20px',
-    border: 'none',
+    padding: '14px',
+    borderRadius: '12px',
     fontSize: '14px',
     fontWeight: 700,
     cursor: 'pointer',
     fontFamily: 'inherit',
     transition: 'background 0.15s, color 0.15s',
+    textAlign: 'center',
   },
   nextBtn: {
     marginTop: 'auto',
@@ -308,6 +340,17 @@ const styles = {
     fontFamily: 'inherit',
     width: '100%',
   },
+  editBtn: {
+    fontSize: '14px',
+    color: '#7F77DD',
+    fontWeight: 600,
+    background: 'none',
+    border: 'none',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+    padding: 0,
+    alignSelf: 'flex-start',
+  },
   error: {
     fontSize: '14px',
     color: '#e53e3e',
@@ -320,7 +363,7 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     gap: '14px',
-    border: '1px solid #eee',
+    border: '1px solid #e5e5e5',
   },
   previewBadge: {
     alignSelf: 'flex-start',
@@ -369,20 +412,9 @@ const styles = {
     gap: '16px',
     textAlign: 'center',
   },
-  doneEmoji: {
-    fontSize: '56px',
-    lineHeight: 1,
-  },
-  doneTitle: {
-    fontSize: '24px',
-    fontWeight: 800,
-    color: '#111',
-  },
-  doneText: {
-    fontSize: '15px',
-    color: '#666',
-    maxWidth: '260px',
-  },
+  doneEmoji: { fontSize: '56px', lineHeight: 1 },
+  doneTitle: { fontSize: '24px', fontWeight: 800, color: '#111' },
+  doneText: { fontSize: '15px', color: '#666', maxWidth: '260px' },
   backBtn: {
     marginTop: '8px',
     padding: '14px 32px',

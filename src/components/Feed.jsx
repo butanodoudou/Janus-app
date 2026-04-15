@@ -41,6 +41,7 @@ export default function Feed() {
     return (
       <div style={styles.center}>
         <div style={styles.loader} />
+        <p style={styles.loadingText}>Chargement des dlemms…</p>
       </div>
     )
   }
@@ -120,5 +121,10 @@ const styles = {
     fontSize: '14px',
     color: '#888',
     maxWidth: '240px',
+  },
+  loadingText: {
+    fontSize: '13px',
+    color: '#aaa',
+    marginTop: '4px',
   },
 }

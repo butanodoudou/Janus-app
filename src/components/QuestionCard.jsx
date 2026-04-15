@@ -7,7 +7,6 @@ const TODAY = new Date().toISOString().slice(0, 10)
 export default function QuestionCard({ question, userId, onVoted, onNext }) {
   const [voted, setVoted] = useState(null)
   const [counts, setCounts] = useState({ A: 0, B: 0 })
-  const [loading, setLoading] = useState(false)
 
   const category = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
   const total = counts.A + counts.B
@@ -15,8 +14,7 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
   const pctB = total > 0 ? 100 - pctA : 50
 
   async function handleVote(choice) {
-    if (voted || loading) return
-    setLoading(false)
+    if (voted) return
 
     // Optimistic update — UI réagit immédiatement
     setCounts(prev => ({ ...prev, [choice]: prev[choice] + 1 }))
@@ -78,15 +76,7 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
           pct={pctA}
           color={category.color}
           onClick={() => handleVote('A')}
-          disabled={loading}
         />
-
-        <div style={styles.divider}>
-          <div style={styles.dividerLine} />
-          <span style={styles.ou}>ou</span>
-          <div style={styles.dividerLine} />
-        </div>
-
         <VoteButton
           label="B"
           text={question.option_b}
@@ -95,7 +85,6 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
           pct={pctB}
           color={category.color}
           onClick={() => handleVote('B')}
-          disabled={loading}
         />
       </div>
 
@@ -113,7 +102,8 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
               style={{ ...styles.nextBtn, background: category.color }}
               onClick={onNext}
             >
-              Suivant →
+              Suivant
+              <ChevronIcon />
             </button>
           </div>
         </div>
@@ -122,7 +112,7 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
   )
 }
 
-function VoteButton({ label, text, voted, isChosen, pct, color, onClick, disabled }) {
+function VoteButton({ label, text, voted, isChosen, pct, color, onClick }) {
   const [displayPct, setDisplayPct] = useState(0)
 
   useEffect(() => {
@@ -139,13 +129,13 @@ function VoteButton({ label, text, voted, isChosen, pct, color, onClick, disable
       style={{
         ...styles.voteBtn,
         borderColor: voted
-          ? isChosen ? color : '#e0e0e0'
-          : '#1a1a1a',
+          ? isChosen ? color : '#e5e5e5'
+          : '#e5e5e5',
         cursor: voted ? 'default' : 'pointer',
         opacity: voted && !isChosen ? 0.55 : 1,
       }}
       onClick={onClick}
-      disabled={disabled || !!voted}
+      disabled={!!voted}
     >
       {/* Animated background fill */}
       <div
@@ -163,8 +153,8 @@ function VoteButton({ label, text, voted, isChosen, pct, color, onClick, disable
       <span
         style={{
           ...styles.voteBtnLabel,
-          background: voted && isChosen ? color : voted ? '#e0e0e0' : '#1a1a1a',
-          color: voted && isChosen ? '#fff' : voted ? '#666' : '#fff',
+          background: voted && isChosen ? color : voted ? '#e5e5e5' : '#111',
+          color: voted && isChosen ? '#fff' : voted ? '#888' : '#fff',
         }}
       >
         {label}
@@ -173,12 +163,7 @@ function VoteButton({ label, text, voted, isChosen, pct, color, onClick, disable
       <span style={styles.voteBtnText}>{text}</span>
 
       {voted && (
-        <span
-          style={{
-            ...styles.votePct,
-            color: isChosen ? color : '#aaa',
-          }}
-        >
+        <span style={{ ...styles.votePct, color: isChosen ? color : '#bbb' }}>
           {displayPct}%
         </span>
       )}
@@ -194,6 +179,14 @@ function ShareIcon() {
       <circle cx="18" cy="19" r="3" />
       <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
       <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+    </svg>
+  )
+}
+
+function ChevronIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="9 18 15 12 9 6" />
     </svg>
   )
 }
@@ -225,7 +218,7 @@ const styles = {
   buttons: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0',
+    gap: '10px',
     flex: 1,
   },
   voteBtn: {
@@ -242,7 +235,6 @@ const styles = {
     fontFamily: 'inherit',
     transition: 'opacity 0.2s, border-color 0.2s',
     minHeight: '70px',
-    marginBottom: '0',
   },
   voteBtnLabel: {
     flexShrink: 0,
@@ -273,24 +265,6 @@ const styles = {
     zIndex: 1,
     transition: 'color 0.2s',
   },
-  divider: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '10px 4px',
-  },
-  dividerLine: {
-    flex: 1,
-    height: '1px',
-    background: '#eee',
-  },
-  ou: {
-    fontSize: '13px',
-    color: '#bbb',
-    fontWeight: 600,
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em',
-  },
   afterVote: {
     display: 'flex',
     flexDirection: 'column',
@@ -311,17 +285,21 @@ const styles = {
     alignItems: 'center',
     gap: '6px',
     padding: '14px 18px',
-    background: '#fff',
-    border: '2px solid #eee',
+    background: '#7F77DD',
+    border: 'none',
     borderRadius: '12px',
     fontSize: '14px',
     fontWeight: 700,
-    color: '#555',
+    color: '#fff',
     cursor: 'pointer',
     fontFamily: 'inherit',
   },
   nextBtn: {
     flex: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '4px',
     padding: '14px',
     border: 'none',
     borderRadius: '12px',
