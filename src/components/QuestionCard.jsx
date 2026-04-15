@@ -65,7 +65,7 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
         {category.label}
       </div>
 
-      <p style={styles.question}>{question.text}</p>
+      {question.text ? <p style={styles.question}>{question.text}</p> : null}
 
       <div style={styles.buttons}>
         <VoteButton
