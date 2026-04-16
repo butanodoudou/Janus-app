@@ -16,19 +16,23 @@ export default function AuthScreen({ title, subtitle }) {
     setError('')
     setLoading(true)
 
-    if (mode === 'signup') {
-      const { error } = await supabase.auth.signUp({
-        email: email.trim(),
-        password,
-        options: { data: { username: username.trim() } },
-      })
-      if (error) setError(translateError(error.message))
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      })
-      if (error) setError(translateError(error.message))
+    try {
+      if (mode === 'signup') {
+        const { error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: { data: { username: username.trim() } },
+        })
+        if (error) setError(translateError(error.message))
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password,
+        })
+        if (error) setError(translateError(error.message))
+      }
+    } catch (e) {
+      setError(e.message || 'Erreur réseau, vérifie ta connexion.')
     }
 
     setLoading(false)
