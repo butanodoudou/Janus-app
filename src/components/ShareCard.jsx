@@ -1,8 +1,9 @@
 import { forwardRef } from 'react'
 import { CATEGORIES } from '../data/questions.js'
 import { calcPct } from '../lib/utils.js'
+import { getCategoryColor } from '../lib/badges.js'
 
-const ShareCard = forwardRef(function ShareCard({ question, counts, userChoice }, ref) {
+const ShareCard = forwardRef(function ShareCard({ question, counts, userChoice, selectedBadge }, ref) {
   const cat = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
   const { pctA, pctB, total } = calcPct(counts)
 
@@ -50,9 +51,16 @@ const ShareCard = forwardRef(function ShareCard({ question, counts, userChoice }
 
       {/* Footer */}
       <div style={styles.footer}>
-        <span style={{ color: cat.color, fontWeight: 700, fontSize: '13px' }}>
-          J'ai choisi {userChoice}
-        </span>
+        <div>
+          <span style={{ color: cat.color, fontWeight: 700, fontSize: '13px' }}>
+            J'ai choisi {userChoice}
+          </span>
+          {selectedBadge && (
+            <p style={{ color: getCategoryColor(selectedBadge.category), fontSize: '11px', fontWeight: 700, margin: '2px 0 0' }}>
+              {selectedBadge.label}
+            </p>
+          )}
+        </div>
         <span style={styles.total}>
           {total.toLocaleString('fr-FR')} réponses
         </span>

@@ -4,7 +4,7 @@ import { CATEGORIES } from '../data/questions.js'
 
 const STEP_LABELS = ['Le dlemm', 'Les options', 'Catégorie', 'Confirmation']
 
-export default function SubmitForm({ onBack }) {
+export default function SubmitForm({ userId, onBack }) {
   const [step, setStep] = useState(0)
   const [form, setForm] = useState({ text: '', option_a: '', option_b: '', category: '' })
   const [submitting, setSubmitting] = useState(false)
@@ -31,6 +31,7 @@ export default function SubmitForm({ onBack }) {
       option_b: form.option_b.trim(),
       category: form.category,
       status: 'pending',
+      user_id: userId || null,
     })
     setSubmitting(false)
     if (err) {

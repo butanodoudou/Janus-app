@@ -8,7 +8,7 @@ import ShareCard from './ShareCard.jsx'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 
-export default function QuestionCard({ question, userId, onVoted, onNext }) {
+export default function QuestionCard({ question, userId, userBadge, onVoted, onNext }) {
   const [voted, setVoted] = useState(null)
   const [counts, setCounts] = useState({ A: 0, B: 0 })
   const [validation, setValidation] = useState(null) // null | 1 | -1
@@ -140,7 +140,7 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
 
       {/* Carte cachée pour le screenshot */}
       <div style={{ position: 'fixed', left: '-9999px', top: 0, pointerEvents: 'none' }}>
-        <ShareCard ref={shareCardRef} question={question} counts={counts} userChoice={voted} />
+        <ShareCard ref={shareCardRef} question={question} counts={counts} userChoice={voted} selectedBadge={userBadge} />
       </div>
 
       {/* Modale aperçu image */}

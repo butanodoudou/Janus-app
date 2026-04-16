@@ -33,6 +33,7 @@ export default function App() {
   const isGuest = !user
   const userId = user?.id || getUserId()
   const isAdmin = Boolean(ADMIN_ID && user?.id === ADMIN_ID)
+  const userBadge = user?.user_metadata?.selected_badge || null
 
   return (
     <div className="app">
@@ -41,8 +42,8 @@ export default function App() {
       </header>
 
       <main style={styles.main}>
-        {view === 'feed' && <Feed userId={userId} isGuest={isGuest} />}
-        {view === 'submit' && <SubmitForm onBack={() => setView('feed')} />}
+        {view === 'feed' && <Feed userId={userId} isGuest={isGuest} userBadge={userBadge} />}
+        {view === 'submit' && <SubmitForm userId={userId} onBack={() => setView('feed')} />}
         {view === 'profile' && <Profile user={user} userId={userId} />}
         {view === 'admin' && isAdmin && <AdminPanel />}
       </main>

@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase.js'
 const TODAY = new Date().toISOString().slice(0, 10)
 const GUEST_LIMIT = 5
 
-export default function Feed({ userId, isGuest }) {
+export default function Feed({ userId, isGuest, userBadge }) {
   const [votedIds, setVotedIds] = useState(null)
   const [allQuestions, setAllQuestions] = useState([])
   const [current, setCurrent] = useState(null)
@@ -103,6 +103,7 @@ export default function Feed({ userId, isGuest }) {
       key={current.id}
       question={current}
       userId={userId}
+      userBadge={userBadge}
       onVoted={handleVoted}
       onNext={handleNext}
     />

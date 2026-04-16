@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { QUESTIONS, CATEGORIES } from '../data/questions.js'
 import { calcPct } from '../lib/utils.js'
+import { calcVoteBadge, calcContribBadge, getCategoryColor, CATEGORY_KEYS, LEVEL_DOTS } from '../lib/badges.js'
 import Comments from './Comments.jsx'
 import AuthScreen from './AuthScreen.jsx'
 
@@ -9,24 +10,34 @@ export default function Profile({ user, userId }) {
   const [stats, setStats] = useState(null)
   const [communityStats, setCommunityStats] = useState(null)
   const [history, setHistory] = useState([])
-  const [selected, setSelected] = useState(null) // { question, choice, counts }
+  const [contribCounts, setContribCounts] = useState({})
+  const [selected, setSelected] = useState(null)
+  const [selectingBadge, setSelectingBadge] = useState(false)
 
   const username = user?.user_metadata?.username
+  const selectedBadge = user?.user_metadata?.selected_badge || null
 
   useEffect(() => {
+    if (!user) return
     async function load() {
       const TODAY = new Date().toISOString().slice(0, 10)
 
-      const [userVotesRes, totalVotesRes] = await Promise.all([
+      const [userVotesRes, totalVotesRes, submissionsRes] = await Promise.all([
         supabase.from('votes').select('question_id, choice, date, created_at').eq('user_id', userId).order('created_at', { ascending: false }),
         supabase.from('votes').select('user_id', { count: 'exact', head: false }),
+        supabase.from('submissions').select('category').eq('user_id', userId).eq('status', 'approved'),
       ])
 
       const uniqueUsers = new Set((totalVotesRes.data || []).map(v => v.user_id)).size
       setCommunityStats({ totalVotes: totalVotesRes.count || 0, uniqueUsers })
 
-      const data = userVotesRes.data
+      const counts = {}
+      for (const s of submissionsRes.data || []) {
+        counts[s.category] = (counts[s.category] || 0) + 1
+      }
+      setContribCounts(counts)
 
+      const data = userVotesRes.data
       if (data !== undefined) {
         const total = (data || []).length
         const todayCount = (data || []).filter(v => v.date === TODAY).length
@@ -59,7 +70,7 @@ export default function Profile({ user, userId }) {
       }
     }
     load()
-  }, [])
+  }, [userId])
 
   if (!user) {
     return (
@@ -78,15 +89,31 @@ export default function Profile({ user, userId }) {
     )
   }
 
+  const voteBadges = CATEGORY_KEYS.map(cat => calcVoteBadge(cat, history)).filter(Boolean)
+  const contribBadges = CATEGORY_KEYS.map(cat => calcContribBadge(cat, contribCounts[cat] || 0)).filter(Boolean)
+
+  async function handleSelectBadge(badge) {
+    if (selectingBadge) return
+    setSelectingBadge(true)
+    const newBadge = selectedBadge?.id === badge.id ? null : badge
+    await supabase.auth.updateUser({ data: { selected_badge: newBadge } })
+    setSelectingBadge(false)
+  }
+
   return (
     <div style={styles.container}>
       <div style={styles.headingRow}>
-        <h2 style={styles.heading}>{username || 'Mon profil'}</h2>
-        {user && (
-          <button style={styles.logoutBtn} onClick={() => supabase.auth.signOut()}>
-            Déconnexion
-          </button>
-        )}
+        <div>
+          <h2 style={styles.heading}>{username || 'Mon profil'}</h2>
+          {selectedBadge && (
+            <p style={{ ...styles.badgeTitle, color: getCategoryColor(selectedBadge.category) }}>
+              {selectedBadge.label} {LEVEL_DOTS[selectedBadge.level]}
+            </p>
+          )}
+        </div>
+        <button style={styles.logoutBtn} onClick={() => supabase.auth.signOut()}>
+          Déconnexion
+        </button>
       </div>
 
       {communityStats && (
@@ -108,6 +135,13 @@ export default function Profile({ user, userId }) {
         <StatCard label="Aujourd'hui" value={stats.todayCount} accent="#D4537E" />
       </div>
 
+      <BadgesSection
+        voteBadges={voteBadges}
+        contribBadges={contribBadges}
+        selectedBadgeId={selectedBadge?.id}
+        onSelect={handleSelectBadge}
+      />
+
       {history.length > 0 && (
         <div style={styles.historySection}>
           <h3 style={styles.historyHeading}>Mes réponses</h3>
@@ -125,19 +159,17 @@ export default function Profile({ user, userId }) {
         </div>
       )}
 
-      {user && (
-        <button style={styles.userId} onClick={() => navigator.clipboard?.writeText(user.email)}>
-          <span style={styles.userIdLabel}>{user.email}</span>
-          <span style={styles.userIdValue}>Copier</span>
-        </button>
-      )}
+      <button style={styles.userId} onClick={() => navigator.clipboard?.writeText(user.email)}>
+        <span style={styles.userIdLabel}>{user.email}</span>
+        <span style={styles.userIdValue}>Copier</span>
+      </button>
 
-      {/* Modale détail dlemm */}
       {selected && (
         <DetailModal
           question={selected.question}
           choice={selected.choice}
           counts={selected.counts}
+          userId={userId}
           onClose={() => setSelected(null)}
         />
       )}
@@ -145,18 +177,89 @@ export default function Profile({ user, userId }) {
   )
 }
 
-function DetailModal({ question, choice, counts, onClose }) {
+function BadgesSection({ voteBadges, contribBadges, selectedBadgeId, onSelect }) {
+  const hasAny = voteBadges.length > 0 || contribBadges.length > 0
+
+  return (
+    <div style={styles.badgesSection}>
+      <h3 style={styles.historyHeading}>Mes badges</h3>
+      {!hasAny ? (
+        <p style={styles.badgesEmpty}>
+          Réponds à 5 dlemms par catégorie pour débloquer tes badges de vote !
+        </p>
+      ) : (
+        <>
+          {voteBadges.length > 0 && (
+            <div style={styles.badgesGroup}>
+              <p style={styles.badgesSubLabel}>Tendance de vote</p>
+              <div style={styles.badgesGrid}>
+                {voteBadges.map(badge => (
+                  <BadgePill
+                    key={badge.id}
+                    badge={badge}
+                    selected={badge.id === selectedBadgeId}
+                    onSelect={() => onSelect(badge)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          {contribBadges.length > 0 && (
+            <div style={styles.badgesGroup}>
+              <p style={styles.badgesSubLabel}>Contributions</p>
+              <div style={styles.badgesGrid}>
+                {contribBadges.map(badge => (
+                  <BadgePill
+                    key={badge.id}
+                    badge={badge}
+                    selected={badge.id === selectedBadgeId}
+                    onSelect={() => onSelect(badge)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          <p style={styles.badgesHint}>Appuie sur un badge pour l'utiliser comme titre de profil</p>
+        </>
+      )}
+    </div>
+  )
+}
+
+function BadgePill({ badge, selected, onSelect }) {
+  const color = getCategoryColor(badge.category)
+  const catLabel = CATEGORIES[badge.category]?.label || badge.category
+
+  return (
+    <button
+      style={{
+        ...styles.badgePill,
+        borderColor: selected ? color : '#e5e5e5',
+        background: selected ? `${color}18` : '#fff',
+      }}
+      onClick={onSelect}
+    >
+      <div style={styles.badgePillTop}>
+        <span style={styles.badgePillCat}>{catLabel}</span>
+        {selected && <span style={{ fontSize: '12px', color }}>✓</span>}
+      </div>
+      <p style={{ ...styles.badgePillName, color }}>{badge.label}</p>
+      <p style={{ ...styles.badgePillDots, color: selected ? color : '#ccc' }}>
+        {LEVEL_DOTS[badge.level]}
+      </p>
+    </button>
+  )
+}
+
+function DetailModal({ question, choice, counts, userId, onClose }) {
   const cat = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
   const { pctA, pctB, total } = calcPct(counts)
 
   return (
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.modal} onClick={e => e.stopPropagation()}>
-        {/* Handle */}
         <div style={styles.handle} />
-
         <div style={styles.modalScroll}>
-          {/* Header */}
           <div style={styles.modalHeader}>
             <span style={{ ...styles.badge, background: cat.color }}>{cat.label}</span>
             <span style={{ fontSize: '13px', color: cat.color, fontWeight: 700 }}>
@@ -166,7 +269,6 @@ function DetailModal({ question, choice, counts, onClose }) {
 
           {question.text && <p style={styles.modalQuestion}>{question.text}</p>}
 
-          {/* Barres de résultats */}
           <div style={styles.modalBars}>
             {[
               { label: 'A', text: question.option_a, pct: pctA, chosen: choice === 'A' },
@@ -201,11 +303,11 @@ function DetailModal({ question, choice, counts, onClose }) {
             {total.toLocaleString('fr-FR')} personne{total > 1 ? 's' : ''} ont répondu
           </p>
 
-          {/* Commentaires */}
           <Comments
             questionId={question.id}
             userChoice={choice}
             categoryColor={cat.color}
+            userId={userId}
           />
         </div>
       </div>
@@ -268,12 +370,13 @@ const styles = {
     flexDirection: 'column',
     gap: '24px',
   },
-  headingRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  heading: { fontSize: '24px', fontWeight: 800, color: '#111' },
+  headingRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
+  heading: { fontSize: '24px', fontWeight: 800, color: '#111', margin: 0 },
+  badgeTitle: { fontSize: '14px', fontWeight: 700, marginTop: '4px' },
   logoutBtn: {
     background: 'none', border: '1px solid #e5e5e5', borderRadius: '8px',
     padding: '6px 12px', fontSize: '13px', color: '#888', fontWeight: 600,
-    cursor: 'pointer', fontFamily: 'inherit',
+    cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
   },
   center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' },
   loader: {
@@ -296,8 +399,30 @@ const styles = {
   },
   cardValue: { fontSize: '28px', fontWeight: 800, lineHeight: 1 },
   cardLabel: { fontSize: '13px', color: '#888', fontWeight: 500 },
+
+  // Badges
+  badgesSection: { display: 'flex', flexDirection: 'column', gap: '14px' },
+  badgesGroup: { display: 'flex', flexDirection: 'column', gap: '8px' },
+  badgesSubLabel: {
+    fontSize: '11px', color: '#aaa', fontWeight: 700,
+    textTransform: 'uppercase', letterSpacing: '0.06em', margin: 0,
+  },
+  badgesGrid: { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' },
+  badgePill: {
+    background: '#fff', border: '2px solid #e5e5e5', borderRadius: '12px',
+    padding: '12px', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
+    width: '100%', transition: 'border-color 0.2s, background 0.2s',
+  },
+  badgePillTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' },
+  badgePillCat: { fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' },
+  badgePillName: { fontSize: '14px', fontWeight: 800, margin: 0, lineHeight: 1.2 },
+  badgePillDots: { fontSize: '11px', fontWeight: 700, margin: '4px 0 0', letterSpacing: '1px' },
+  badgesEmpty: { fontSize: '13px', color: '#aaa', fontWeight: 500 },
+  badgesHint: { fontSize: '11px', color: '#ccc', fontWeight: 500, textAlign: 'center', margin: 0 },
+
+  // History
   historySection: { display: 'flex', flexDirection: 'column', gap: '14px' },
-  historyHeading: { fontSize: '18px', fontWeight: 800, color: '#111' },
+  historyHeading: { fontSize: '18px', fontWeight: 800, color: '#111', margin: 0 },
   historyList: { display: 'flex', flexDirection: 'column', gap: '12px' },
   historyCard: {
     background: '#fff', borderRadius: '16px', padding: '16px',
