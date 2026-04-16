@@ -221,7 +221,7 @@ function DetailModal({ question, choice, counts, onClose }) {
 
 function HistoryCard({ question, choice, counts, onTap }) {
   const cat = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
-  const { pctA, pctB } = calcPct(counts)
+  const { pctA, pctB, total } = calcPct(counts)
   const chosenPct = choice === 'A' ? pctA : pctB
   const otherPct = choice === 'A' ? pctB : pctA
 
