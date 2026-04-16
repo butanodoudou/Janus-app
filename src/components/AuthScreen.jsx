@@ -38,7 +38,7 @@ export default function AuthScreen({ title, subtitle }) {
     if (msg.includes('already registered')) return 'Cet email est déjà utilisé.'
     if (msg.includes('Invalid login')) return 'Email ou mot de passe incorrect.'
     if (msg.includes('Password should')) return 'Mot de passe trop court (6 caractères min).'
-    return 'Une erreur est survenue, réessaie.'
+    return msg
   }
 
   function handleKey(e) {
