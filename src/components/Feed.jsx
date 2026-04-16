@@ -10,7 +10,7 @@ const GUEST_LIMIT = 5
 export default function Feed({ userId, isGuest }) {
   const [votedIds, setVotedIds] = useState(null)
   const [allQuestions, setAllQuestions] = useState([])
-  const [index, setIndex] = useState(0)
+  const [current, setCurrent] = useState(null)
   const [guestCount, setGuestCount] = useState(() =>
     isGuest ? parseInt(localStorage.getItem('dlemm_guest_count') || '0', 10) : 0
   )
@@ -44,6 +44,14 @@ export default function Feed({ userId, isGuest }) {
     load()
   }, [userId])
 
+  // Initialise la question courante une fois les données chargées
+  useEffect(() => {
+    if (allQuestions.length > 0 && votedIds !== null && !current) {
+      const first = allQuestions.find(q => !votedIds.has(q.id))
+      if (first) setCurrent(first)
+    }
+  }, [allQuestions, votedIds])
+
   if (votedIds === null) {
     return (
       <div style={styles.center}>
@@ -53,7 +61,7 @@ export default function Feed({ userId, isGuest }) {
     )
   }
 
-  if (isGuest && guestCount >= GUEST_LIMIT) {
+  if (isGuest && guestCount >= GUEST_LIMIT && votedIds !== null) {
     return (
       <div style={styles.wall}>
         <p style={styles.wallEmoji}>🔒</p>
@@ -65,9 +73,7 @@ export default function Feed({ userId, isGuest }) {
     )
   }
 
-  const queue = allQuestions.filter(q => !votedIds.has(q.id))
-
-  if (queue.length === 0) {
+  if (!current) {
     return (
       <div style={styles.center}>
         <p style={styles.emptyEmoji}>🎉</p>
@@ -76,8 +82,6 @@ export default function Feed({ userId, isGuest }) {
       </div>
     )
   }
-
-  const question = queue[Math.min(index, queue.length - 1)]
 
   function handleVoted(questionId) {
     setVotedIds(prev => new Set([...prev, questionId]))
@@ -89,14 +93,14 @@ export default function Feed({ userId, isGuest }) {
   }
 
   function handleNext() {
-    const nextIndex = index + 1
-    setIndex(nextIndex >= queue.length - 1 ? 0 : nextIndex)
+    const next = allQuestions.find(q => !votedIds.has(q.id) && q.id !== current.id)
+    setCurrent(next || null)
   }
 
   return (
     <QuestionCard
-      key={question.id}
-      question={question}
+      key={current.id}
+      question={current}
       userId={userId}
       onVoted={handleVoted}
       onNext={handleNext}
