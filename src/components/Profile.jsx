@@ -177,12 +177,18 @@ export default function Profile({ user, userId }) {
   )
 }
 
+const TOTAL_BADGES = CATEGORY_KEYS.length * 2 // 7 vote + 7 contrib
+
 function BadgesSection({ voteBadges, contribBadges, selectedBadgeId, onSelect }) {
-  const hasAny = voteBadges.length > 0 || contribBadges.length > 0
+  const earned = voteBadges.length + contribBadges.length
+  const hasAny = earned > 0
 
   return (
     <div style={styles.badgesSection}>
-      <h3 style={styles.historyHeading}>Mes badges</h3>
+      <div style={styles.badgesHeader}>
+        <h3 style={styles.historyHeading}>Mes badges</h3>
+        <span style={styles.badgesCount}>{earned} / {TOTAL_BADGES}</span>
+      </div>
       {!hasAny ? (
         <p style={styles.badgesEmpty}>
           Réponds à 5 dlemms par catégorie pour débloquer tes badges de vote !
@@ -226,6 +232,15 @@ function BadgesSection({ voteBadges, contribBadges, selectedBadgeId, onSelect })
   )
 }
 
+function badgeEarnedText(badge) {
+  if (badge.type === 'contrib') {
+    return `${badge.count} soumission${badge.count > 1 ? 's' : ''} approuvée${badge.count > 1 ? 's' : ''}`
+  }
+  if (badge.side === 'neutral') return `${badge.count} dlemms · trop imprévisible !`
+  const sideLabel = badge.side === 'majority' ? 'avec la majorité' : 'contre la majorité'
+  return `${badge.count} dlemms · ${badge.pct}% ${sideLabel}`
+}
+
 function BadgePill({ badge, selected, onSelect }) {
   const color = getCategoryColor(badge.category)
   const catLabel = CATEGORIES[badge.category]?.label || badge.category
@@ -247,6 +262,7 @@ function BadgePill({ badge, selected, onSelect }) {
       <p style={{ ...styles.badgePillDots, color: selected ? color : '#ccc' }}>
         {LEVEL_DOTS[badge.level]}
       </p>
+      <p style={styles.badgePillHow}>{badgeEarnedText(badge)}</p>
     </button>
   )
 }
@@ -402,6 +418,8 @@ const styles = {
 
   // Badges
   badgesSection: { display: 'flex', flexDirection: 'column', gap: '14px' },
+  badgesHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  badgesCount: { fontSize: '13px', fontWeight: 700, color: '#aaa' },
   badgesGroup: { display: 'flex', flexDirection: 'column', gap: '8px' },
   badgesSubLabel: {
     fontSize: '11px', color: '#aaa', fontWeight: 700,
@@ -417,6 +435,7 @@ const styles = {
   badgePillCat: { fontSize: '10px', color: '#aaa', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' },
   badgePillName: { fontSize: '14px', fontWeight: 800, margin: 0, lineHeight: 1.2 },
   badgePillDots: { fontSize: '11px', fontWeight: 700, margin: '4px 0 0', letterSpacing: '1px' },
+  badgePillHow: { fontSize: '10px', color: '#bbb', fontWeight: 500, margin: '4px 0 0', lineHeight: 1.3 },
   badgesEmpty: { fontSize: '13px', color: '#aaa', fontWeight: 500 },
   badgesHint: { fontSize: '11px', color: '#ccc', fontWeight: 500, textAlign: 'center', margin: 0 },
 

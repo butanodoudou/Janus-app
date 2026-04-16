@@ -51,7 +51,7 @@ export function calcVoteBadge(category, history) {
   let side, pct
   if (pctWith >= 60) { side = 'majority'; pct = pctWith }
   else if (pctAgainst >= 60) { side = 'minority'; pct = pctAgainst }
-  else return { id: `vote_${category}_neutral`, label: 'Imprévisible', level: 0, side: 'neutral', category, type: 'vote' }
+  else return { id: `vote_${category}_neutral`, label: 'Imprévisible', level: 0, side: 'neutral', category, type: 'vote', count: entries.length, pct: null }
 
   const level = pct >= VOTE_THRESHOLDS[2] ? 2 : pct >= VOTE_THRESHOLDS[1] ? 1 : 0
   return {
@@ -62,6 +62,7 @@ export function calcVoteBadge(category, history) {
     category,
     type: 'vote',
     count: entries.length,
+    pct: Math.round(pct),
   }
 }
 
