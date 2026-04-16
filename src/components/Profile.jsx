@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
-import { getUserId } from '../lib/userId.js'
 import { QUESTIONS, CATEGORIES } from '../data/questions.js'
-import { calcPct, DAILY_LIMIT, TOTAL_THRESHOLD } from '../lib/utils.js'
+import { calcPct } from '../lib/utils.js'
 import Comments from './Comments.jsx'
 
-export default function Profile() {
+export default function Profile({ user, userId }) {
   const [stats, setStats] = useState(null)
   const [communityStats, setCommunityStats] = useState(null)
   const [history, setHistory] = useState([])
   const [selected, setSelected] = useState(null) // { question, choice, counts }
-  const userId = getUserId()
+
+  const username = user?.user_metadata?.username
 
   useEffect(() => {
     async function load() {
@@ -29,9 +29,7 @@ export default function Profile() {
       if (data !== undefined) {
         const total = (data || []).length
         const todayCount = (data || []).filter(v => v.date === TODAY).length
-        const limitActive = total >= TOTAL_THRESHOLD
-        const remaining = limitActive ? Math.max(0, DAILY_LIMIT - todayCount) : null
-        setStats({ total, todayCount, remaining, limitActive })
+        setStats({ total, todayCount })
 
         const entries = (data || []).map(vote => {
           const question = QUESTIONS.find(q => q.id === vote.question_id)
@@ -70,11 +68,16 @@ export default function Profile() {
     )
   }
 
-  const progressPct = Math.min(100, Math.round((stats.total / 100) * 100))
-
   return (
     <div style={styles.container}>
-      <h2 style={styles.heading}>Mon profil</h2>
+      <div style={styles.headingRow}>
+        <h2 style={styles.heading}>{username || 'Mon profil'}</h2>
+        {user && (
+          <button style={styles.logoutBtn} onClick={() => supabase.auth.signOut()}>
+            Déconnexion
+          </button>
+        )}
+      </div>
 
       {communityStats && (
         <div style={styles.community}>
@@ -90,30 +93,9 @@ export default function Profile() {
         </div>
       )}
 
-      <div style={{
-        ...styles.cards,
-        gridTemplateColumns: stats.limitActive ? 'repeat(3, 1fr)' : 'repeat(2, 1fr)',
-      }}>
+      <div style={{ ...styles.cards, gridTemplateColumns: 'repeat(2, 1fr)' }}>
         <StatCard label="Dlemms répondus" value={stats.total} accent="#7F77DD" />
         <StatCard label="Aujourd'hui" value={stats.todayCount} accent="#D4537E" />
-        {stats.limitActive && (
-          <StatCard label="Restants" value={stats.remaining} accent="#1D9E75" />
-        )}
-      </div>
-
-      <div style={styles.progressSection}>
-        <div style={styles.progressHeader}>
-          <span style={styles.progressLabel}>Progression</span>
-          <span style={styles.progressCount}>{stats.total} / 100</span>
-        </div>
-        <div style={styles.progressTrack}>
-          <div style={{ ...styles.progressFill, width: `${progressPct}%` }} />
-        </div>
-        {!stats.limitActive && stats.total < TOTAL_THRESHOLD && (
-          <p style={styles.progressHint}>
-            Encore {TOTAL_THRESHOLD - stats.total} réponses pour débloquer la limite quotidienne
-          </p>
-        )}
       </div>
 
       {history.length > 0 && (
@@ -133,10 +115,12 @@ export default function Profile() {
         </div>
       )}
 
-      <button style={styles.userId} onClick={() => navigator.clipboard?.writeText(userId)}>
-        <span style={styles.userIdLabel}>ID anonyme</span>
-        <span style={styles.userIdValue}>{userId.slice(0, 8)}… · Copier</span>
-      </button>
+      {user && (
+        <button style={styles.userId} onClick={() => navigator.clipboard?.writeText(user.email)}>
+          <span style={styles.userIdLabel}>{user.email}</span>
+          <span style={styles.userIdValue}>Copier</span>
+        </button>
+      )}
 
       {/* Modale détail dlemm */}
       {selected && (
@@ -274,7 +258,13 @@ const styles = {
     flexDirection: 'column',
     gap: '24px',
   },
+  headingRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   heading: { fontSize: '24px', fontWeight: 800, color: '#111' },
+  logoutBtn: {
+    background: 'none', border: '1px solid #e5e5e5', borderRadius: '8px',
+    padding: '6px 12px', fontSize: '13px', color: '#888', fontWeight: 600,
+    cursor: 'pointer', fontFamily: 'inherit',
+  },
   center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' },
   loader: {
     width: '32px', height: '32px',
@@ -296,13 +286,6 @@ const styles = {
   },
   cardValue: { fontSize: '28px', fontWeight: 800, lineHeight: 1 },
   cardLabel: { fontSize: '13px', color: '#888', fontWeight: 500 },
-  progressSection: { display: 'flex', flexDirection: 'column', gap: '8px' },
-  progressHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  progressLabel: { fontSize: '14px', fontWeight: 700, color: '#111' },
-  progressCount: { fontSize: '13px', color: '#888', fontWeight: 600 },
-  progressTrack: { height: '8px', background: '#eee', borderRadius: '4px', overflow: 'hidden' },
-  progressFill: { height: '100%', background: '#7F77DD', borderRadius: '4px', transition: 'width 0.6s ease' },
-  progressHint: { fontSize: '12px', color: '#aaa' },
   historySection: { display: 'flex', flexDirection: 'column', gap: '14px' },
   historyHeading: { fontSize: '18px', fontWeight: 800, color: '#111' },
   historyList: { display: 'flex', flexDirection: 'column', gap: '12px' },

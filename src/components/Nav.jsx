@@ -4,8 +4,8 @@ const TABS = [
   { id: 'profile', label: 'Profil',   icon: IconUser },
 ]
 
-export default function Nav({ view, setView, adminUnlocked }) {
-  const tabs = adminUnlocked
+export default function Nav({ view, setView, isAdmin }) {
+  const tabs = isAdmin
     ? [...TABS, { id: 'admin', label: 'Admin', icon: IconShield }]
     : TABS
 

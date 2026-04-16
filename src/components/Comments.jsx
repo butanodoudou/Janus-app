@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
-import { getUserId } from '../lib/userId.js'
 
 const MAX_CHARS = 150
 
@@ -15,12 +14,11 @@ function timeAgo(dateStr) {
   return `il y a ${d}j`
 }
 
-export default function Comments({ questionId, userChoice, categoryColor }) {
+export default function Comments({ questionId, userChoice, categoryColor, userId }) {
   const [comments, setComments] = useState([])
   const [text, setText] = useState('')
   const [replyTo, setReplyTo] = useState(null) // { id, choice, preview }
   const [submitting, setSubmitting] = useState(false)
-  const userId = getUserId()
 
   useEffect(() => {
     loadComments()

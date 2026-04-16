@@ -1,41 +1,31 @@
 import { useState, useEffect } from 'react'
 import QuestionCard from './QuestionCard.jsx'
-import DailyLimitScreen from './DailyLimitScreen.jsx'
+import AuthScreen from './AuthScreen.jsx'
 import { QUESTIONS } from '../data/questions.js'
-import { getUserId } from '../lib/userId.js'
 import { supabase } from '../lib/supabase.js'
-import { DAILY_LIMIT, TOTAL_THRESHOLD } from '../lib/utils.js'
 
-export default function Feed() {
+const TODAY = new Date().toISOString().slice(0, 10)
+const GUEST_LIMIT = 5
+
+export default function Feed({ userId, isGuest }) {
   const [votedIds, setVotedIds] = useState(null)
   const [allQuestions, setAllQuestions] = useState([])
-  const [todayCount, setTodayCount] = useState(0)
-  const [totalCount, setTotalCount] = useState(0)
   const [index, setIndex] = useState(0)
-
-  const userId = getUserId()
+  const [guestCount, setGuestCount] = useState(() =>
+    isGuest ? parseInt(localStorage.getItem('dlemm_guest_count') || '0', 10) : 0
+  )
 
   useEffect(() => {
     async function load() {
-      const TODAY = new Date().toISOString().slice(0, 10)
-
-      // Charge votes et soumissions approuvées en parallèle
       const [votesRes, submissionsRes] = await Promise.all([
-        supabase.from('votes').select('question_id, date').eq('user_id', userId),
+        supabase.from('votes').select('question_id').eq('user_id', userId),
         supabase.from('submissions').select('id, category, text, option_a, option_b').eq('status', 'approved').order('created_at', { ascending: true }),
       ])
 
       const ids = new Set()
-      let today = 0
-      if (votesRes.data) {
-        votesRes.data.forEach(v => ids.add(v.question_id))
-        today = votesRes.data.filter(v => v.date === TODAY).length
-        setTodayCount(today)
-        setTotalCount(votesRes.data.length)
-      }
+      if (votesRes.data) votesRes.data.forEach(v => ids.add(v.question_id))
       setVotedIds(ids)
 
-      // Fusionne questions fixes + soumissions approuvées, puis mélange
       const approved = (submissionsRes.data || []).map(s => ({
         id: s.id,
         category: s.category,
@@ -43,6 +33,7 @@ export default function Feed() {
         option_a: s.option_a,
         option_b: s.option_b,
       }))
+
       const merged = [...QUESTIONS, ...approved]
       for (let i = merged.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1))
@@ -51,7 +42,7 @@ export default function Feed() {
       setAllQuestions(merged)
     }
     load()
-  }, [])
+  }, [userId])
 
   if (votedIds === null) {
     return (
@@ -62,8 +53,17 @@ export default function Feed() {
     )
   }
 
-  const limitActive = totalCount >= TOTAL_THRESHOLD && todayCount >= DAILY_LIMIT
-  if (limitActive) return <DailyLimitScreen />
+  if (isGuest && guestCount >= GUEST_LIMIT) {
+    return (
+      <div style={styles.wall}>
+        <p style={styles.wallEmoji}>🔒</p>
+        <AuthScreen
+          title="Tu as répondu à 5 dlemms !"
+          subtitle="Crée un compte gratuit pour continuer sans limite."
+        />
+      </div>
+    )
+  }
 
   const queue = allQuestions.filter(q => !votedIds.has(q.id))
 
@@ -81,8 +81,11 @@ export default function Feed() {
 
   function handleVoted(questionId) {
     setVotedIds(prev => new Set([...prev, questionId]))
-    setTodayCount(prev => prev + 1)
-    setTotalCount(prev => prev + 1)
+    if (isGuest) {
+      const next = guestCount + 1
+      setGuestCount(next)
+      localStorage.setItem('dlemm_guest_count', next)
+    }
   }
 
   function handleNext() {
@@ -120,23 +123,22 @@ const styles = {
     borderRadius: '50%',
     animation: 'spin 0.8s linear infinite',
   },
-  emptyEmoji: {
-    fontSize: '52px',
-    lineHeight: 1,
-  },
-  emptyTitle: {
-    fontSize: '20px',
-    fontWeight: 800,
-    color: '#111',
-  },
-  emptyText: {
-    fontSize: '14px',
-    color: '#888',
-    maxWidth: '240px',
-  },
   loadingText: {
     fontSize: '13px',
     color: '#aaa',
     marginTop: '4px',
+  },
+  emptyEmoji: { fontSize: '52px', lineHeight: 1 },
+  emptyTitle: { fontSize: '20px', fontWeight: 800, color: '#111' },
+  emptyText: { fontSize: '14px', color: '#888', maxWidth: '240px' },
+  wall: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+  },
+  wallEmoji: {
+    fontSize: '48px',
+    textAlign: 'center',
+    marginTop: '40px',
   },
 }

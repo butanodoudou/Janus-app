@@ -119,6 +119,7 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
             questionId={question.id}
             userChoice={voted}
             categoryColor={category.color}
+            userId={userId}
           />
         </div>
       )}
