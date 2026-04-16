@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { CATEGORIES } from '../data/questions.js'
 import Comments from './Comments.jsx'
@@ -8,6 +8,7 @@ const TODAY = new Date().toISOString().slice(0, 10)
 export default function QuestionCard({ question, userId, onVoted, onNext }) {
   const [voted, setVoted] = useState(null)
   const [counts, setCounts] = useState({ A: 0, B: 0 })
+  const afterVoteRef = useRef(null)
 
   const category = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
   const total = counts.A + counts.B
@@ -21,6 +22,11 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
     setCounts(prev => ({ ...prev, [choice]: prev[choice] + 1 }))
     setVoted(choice)
     onVoted(question.id)
+
+    // Scroll vers les commentaires après un court délai (laisse le temps au DOM)
+    setTimeout(() => {
+      afterVoteRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 350)
 
     // Sync Supabase en arrière-plan
     await supabase.from('votes').insert({
@@ -90,7 +96,7 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
       </div>
 
       {voted && (
-        <div style={styles.afterVote}>
+        <div ref={afterVoteRef} style={styles.afterVote}>
           <div style={styles.actionRow}>
             <p style={styles.totalVotes}>
               {total.toLocaleString('fr-FR')} personne{total > 1 ? 's' : ''} ont répondu
