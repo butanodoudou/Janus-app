@@ -4,10 +4,7 @@ import DailyLimitScreen from './DailyLimitScreen.jsx'
 import { QUESTIONS } from '../data/questions.js'
 import { getUserId } from '../lib/userId.js'
 import { supabase } from '../lib/supabase.js'
-
-const TODAY = new Date().toISOString().slice(0, 10)
-const DAILY_LIMIT = 5
-const TOTAL_THRESHOLD = 30
+import { DAILY_LIMIT, TOTAL_THRESHOLD } from '../lib/utils.js'
 
 export default function Feed() {
   const [votedIds, setVotedIds] = useState(null)
@@ -20,6 +17,8 @@ export default function Feed() {
 
   useEffect(() => {
     async function load() {
+      const TODAY = new Date().toISOString().slice(0, 10)
+
       // Charge votes et soumissions approuvées en parallèle
       const [votesRes, submissionsRes] = await Promise.all([
         supabase.from('votes').select('question_id, date').eq('user_id', userId),

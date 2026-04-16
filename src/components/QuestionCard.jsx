@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, memo } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { CATEGORIES } from '../data/questions.js'
+import { calcPct } from '../lib/utils.js'
 import Comments from './Comments.jsx'
 
 const TODAY = new Date().toISOString().slice(0, 10)
@@ -11,9 +12,7 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
   const afterVoteRef = useRef(null)
 
   const category = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
-  const total = counts.A + counts.B
-  const pctA = total > 0 ? Math.round((counts.A / total) * 100) : 50
-  const pctB = total > 0 ? 100 - pctA : 50
+  const { pctA, pctB, total } = calcPct(counts)
 
   async function handleVote(choice) {
     if (voted) return
@@ -127,7 +126,7 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
   )
 }
 
-function VoteButton({ label, text, voted, isChosen, pct, color, onClick }) {
+const VoteButton = memo(function VoteButton({ label, text, voted, isChosen, pct, color, onClick }) {
   const [displayPct, setDisplayPct] = useState(0)
 
   useEffect(() => {
@@ -184,7 +183,7 @@ function VoteButton({ label, text, voted, isChosen, pct, color, onClick }) {
       )}
     </button>
   )
-}
+})
 
 function ShareIcon() {
   return (

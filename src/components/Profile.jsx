@@ -2,11 +2,8 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { getUserId } from '../lib/userId.js'
 import { QUESTIONS, CATEGORIES } from '../data/questions.js'
+import { calcPct, DAILY_LIMIT, TOTAL_THRESHOLD } from '../lib/utils.js'
 import Comments from './Comments.jsx'
-
-const TODAY = new Date().toISOString().slice(0, 10)
-const DAILY_LIMIT = 5
-const TOTAL_THRESHOLD = 30
 
 export default function Profile() {
   const [stats, setStats] = useState(null)
@@ -17,6 +14,8 @@ export default function Profile() {
 
   useEffect(() => {
     async function load() {
+      const TODAY = new Date().toISOString().slice(0, 10)
+
       const [userVotesRes, totalVotesRes] = await Promise.all([
         supabase.from('votes').select('question_id, choice, date, created_at').eq('user_id', userId).order('created_at', { ascending: false }),
         supabase.from('votes').select('user_id', { count: 'exact', head: false }),
@@ -154,9 +153,7 @@ export default function Profile() {
 
 function DetailModal({ question, choice, counts, onClose }) {
   const cat = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
-  const total = counts.A + counts.B
-  const pctA = total > 0 ? Math.round((counts.A / total) * 100) : 50
-  const pctB = total > 0 ? 100 - pctA : 50
+  const { pctA, pctB, total } = calcPct(counts)
 
   return (
     <div style={styles.overlay} onClick={onClose}>
@@ -224,9 +221,7 @@ function DetailModal({ question, choice, counts, onClose }) {
 
 function HistoryCard({ question, choice, counts, onTap }) {
   const cat = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
-  const total = counts.A + counts.B
-  const pctA = total > 0 ? Math.round((counts.A / total) * 100) : 50
-  const pctB = total > 0 ? 100 - pctA : 50
+  const { pctA, pctB } = calcPct(counts)
   const chosenPct = choice === 'A' ? pctA : pctB
   const otherPct = choice === 'A' ? pctB : pctA
 
