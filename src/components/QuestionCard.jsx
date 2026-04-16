@@ -12,6 +12,7 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
   const [voted, setVoted] = useState(null)
   const [counts, setCounts] = useState({ A: 0, B: 0 })
   const [validation, setValidation] = useState(null) // null | 1 | -1
+  const [sharing, setSharing] = useState(false)
   const afterVoteRef = useRef(null)
   const shareCardRef = useRef(null)
 
@@ -53,27 +54,31 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
   }
 
   async function handleShare() {
+    if (sharing) return
+    setSharing(true)
     try {
       const canvas = await html2canvas(shareCardRef.current, {
         scale: 2,
-        backgroundColor: '#fafafa',
+        backgroundColor: '#ffffff',
         useCORS: true,
+        logging: false,
       })
-      canvas.toBlob(async blob => {
-        const file = new File([blob], 'dlemm.png', { type: 'image/png' })
-        if (navigator.share && navigator.canShare({ files: [file] })) {
-          await navigator.share({ files: [file], title: 'd·lemm' })
-        } else {
-          const url = URL.createObjectURL(blob)
-          const a = document.createElement('a')
-          a.href = url
-          a.download = 'dlemm.png'
-          a.click()
-          URL.revokeObjectURL(url)
-        }
-      }, 'image/png')
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
+      const file = new File([blob], 'dlemm.png', { type: 'image/png' })
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'd·lemm' })
+      } else {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'dlemm.png'
+        a.click()
+        URL.revokeObjectURL(url)
+      }
     } catch {
       navigator.clipboard?.writeText(`d·lemm — ${question.option_a} ou ${question.option_b} ?`)
+    } finally {
+      setSharing(false)
     }
   }
 
@@ -113,9 +118,8 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
               {total.toLocaleString('fr-FR')} personne{total > 1 ? 's' : ''} ont répondu
             </p>
             <div style={styles.actionBtns}>
-              <button style={styles.shareBtn} onClick={handleShare}>
-                <ShareIcon />
-                Partager
+              <button style={{ ...styles.shareBtn, opacity: sharing ? 0.6 : 1 }} onClick={handleShare} disabled={sharing}>
+                {sharing ? '…' : <><ShareIcon /> Partager</>}
               </button>
               <button
                 style={{ ...styles.nextBtn, background: category.color }}
