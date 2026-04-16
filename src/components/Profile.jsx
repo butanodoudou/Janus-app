@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase.js'
 import { QUESTIONS, CATEGORIES } from '../data/questions.js'
 import { calcPct } from '../lib/utils.js'
 import Comments from './Comments.jsx'
+import AuthScreen from './AuthScreen.jsx'
 
 export default function Profile({ user, userId }) {
   const [stats, setStats] = useState(null)
@@ -59,6 +60,15 @@ export default function Profile({ user, userId }) {
     }
     load()
   }, [])
+
+  if (!user) {
+    return (
+      <AuthScreen
+        title="Rejoins d·lemm"
+        subtitle="Crée un compte pour sauvegarder ta progression et accéder à ton historique."
+      />
+    )
+  }
 
   if (!stats) {
     return (
