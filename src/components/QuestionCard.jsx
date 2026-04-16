@@ -13,6 +13,7 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
   const [counts, setCounts] = useState({ A: 0, B: 0 })
   const [validation, setValidation] = useState(null) // null | 1 | -1
   const [sharing, setSharing] = useState(false)
+  const [shareImageUrl, setShareImageUrl] = useState(null)
   const afterVoteRef = useRef(null)
   const shareCardRef = useRef(null)
 
@@ -63,18 +64,8 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
         useCORS: true,
         logging: false,
       })
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'))
-      const file = new File([blob], 'dlemm.png', { type: 'image/png' })
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'd·lemm' })
-      } else {
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = 'dlemm.png'
-        a.click()
-        URL.revokeObjectURL(url)
-      }
+      const dataUrl = canvas.toDataURL('image/png')
+      setShareImageUrl(dataUrl)
     } catch {
       navigator.clipboard?.writeText(`d·lemm — ${question.option_a} ou ${question.option_b} ?`)
     } finally {
@@ -151,6 +142,19 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
       <div style={{ position: 'fixed', left: '-9999px', top: 0, pointerEvents: 'none' }}>
         <ShareCard ref={shareCardRef} question={question} counts={counts} userChoice={voted} />
       </div>
+
+      {/* Modale aperçu image */}
+      {shareImageUrl && (
+        <div style={styles.shareOverlay} onClick={() => setShareImageUrl(null)}>
+          <div style={styles.shareModal} onClick={e => e.stopPropagation()}>
+            <p style={styles.shareHint}>Appuie long sur l'image pour la sauvegarder 👇</p>
+            <img src={shareImageUrl} alt="Carte d·lemm" style={styles.shareImage} />
+            <button style={styles.shareCloseBtn} onClick={() => setShareImageUrl(null)}>
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -412,5 +416,45 @@ const styles = {
     fontWeight: 600,
     textAlign: 'center',
     padding: '4px 0',
+  },
+  shareOverlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 300,
+    padding: '24px',
+  },
+  shareModal: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '16px',
+    width: '100%',
+    maxWidth: '380px',
+  },
+  shareHint: {
+    fontSize: '14px',
+    color: '#fff',
+    fontWeight: 600,
+    textAlign: 'center',
+  },
+  shareImage: {
+    width: '100%',
+    borderRadius: '16px',
+    boxShadow: '0 8px 40px rgba(0,0,0,0.4)',
+  },
+  shareCloseBtn: {
+    padding: '12px 32px',
+    background: 'rgba(255,255,255,0.15)',
+    border: '1.5px solid rgba(255,255,255,0.3)',
+    borderRadius: '12px',
+    color: '#fff',
+    fontSize: '14px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    fontFamily: 'inherit',
   },
 }
