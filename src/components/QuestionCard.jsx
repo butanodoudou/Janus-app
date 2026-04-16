@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, memo } from 'react'
+import html2canvas from 'html2canvas'
 import { supabase } from '../lib/supabase.js'
 import { CATEGORIES } from '../data/questions.js'
 import { calcPct } from '../lib/utils.js'
 import Comments from './Comments.jsx'
+import ShareCard from './ShareCard.jsx'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 
@@ -11,6 +13,7 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
   const [counts, setCounts] = useState({ A: 0, B: 0 })
   const [validation, setValidation] = useState(null) // null | 1 | -1
   const afterVoteRef = useRef(null)
+  const shareCardRef = useRef(null)
 
   const category = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
   const { pctA, pctB, total } = calcPct(counts)
@@ -49,20 +52,28 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
     }
   }
 
-  function handleShare() {
-    const text = [
-      `d·lemm — ${question.text}`,
-      '',
-      `A: ${question.option_a}`,
-      `B: ${question.option_b}`,
-      '',
-      `${pctA}% ont choisi A · ${pctB}% ont choisi B`,
-    ].join('\n')
-
-    if (navigator.share) {
-      navigator.share({ title: 'd·lemm', text })
-    } else {
-      navigator.clipboard?.writeText(text)
+  async function handleShare() {
+    try {
+      const canvas = await html2canvas(shareCardRef.current, {
+        scale: 2,
+        backgroundColor: '#fafafa',
+        useCORS: true,
+      })
+      canvas.toBlob(async blob => {
+        const file = new File([blob], 'dlemm.png', { type: 'image/png' })
+        if (navigator.share && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'd·lemm' })
+        } else {
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = 'dlemm.png'
+          a.click()
+          URL.revokeObjectURL(url)
+        }
+      }, 'image/png')
+    } catch {
+      navigator.clipboard?.writeText(`d·lemm — ${question.option_a} ou ${question.option_b} ?`)
     }
   }
 
@@ -131,6 +142,11 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
           />
         </div>
       )}
+
+      {/* Carte cachée pour le screenshot */}
+      <div style={{ position: 'fixed', left: '-9999px', top: 0, pointerEvents: 'none' }}>
+        <ShareCard ref={shareCardRef} question={question} counts={counts} userChoice={voted} />
+      </div>
     </div>
   )
 }
