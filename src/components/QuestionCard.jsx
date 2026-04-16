@@ -9,6 +9,7 @@ const TODAY = new Date().toISOString().slice(0, 10)
 export default function QuestionCard({ question, userId, onVoted, onNext }) {
   const [voted, setVoted] = useState(null)
   const [counts, setCounts] = useState({ A: 0, B: 0 })
+  const [validation, setValidation] = useState(null) // null | 1 | -1
   const afterVoteRef = useRef(null)
 
   const category = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
@@ -115,6 +116,15 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
             </div>
           </div>
 
+          {question._community && (
+            <ValidationRow
+              questionId={question.id}
+              userId={userId}
+              validation={validation}
+              onValidate={setValidation}
+            />
+          )}
+
           <Comments
             questionId={question.id}
             userChoice={voted}
@@ -185,6 +195,34 @@ const VoteButton = memo(function VoteButton({ label, text, voted, isChosen, pct,
     </button>
   )
 })
+
+function ValidationRow({ questionId, userId, validation, onValidate }) {
+  async function handleValidation(value) {
+    if (validation !== null) return
+    onValidate(value)
+    await supabase.from('validations').upsert({
+      user_id: userId,
+      question_id: questionId,
+      value,
+    }, { onConflict: 'user_id,question_id' })
+  }
+
+  if (validation !== null) {
+    return (
+      <p style={styles.validationThanks}>
+        {validation === 1 ? '👍 Merci pour ton retour !' : '👎 Noté, on prend en compte.'}
+      </p>
+    )
+  }
+
+  return (
+    <div style={styles.validationRow}>
+      <span style={styles.validationLabel}>Ce dlemm était bon ?</span>
+      <button style={styles.validationBtn} onClick={() => handleValidation(1)}>👍</button>
+      <button style={styles.validationBtn} onClick={() => handleValidation(-1)}>👎</button>
+    </div>
+  )
+}
 
 function ShareIcon() {
   return (
@@ -328,5 +366,33 @@ const styles = {
     color: '#fff',
     cursor: 'pointer',
     fontFamily: 'inherit',
+  },
+  validationRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 0',
+  },
+  validationLabel: {
+    flex: 1,
+    fontSize: '13px',
+    color: '#888',
+    fontWeight: 600,
+  },
+  validationBtn: {
+    fontSize: '20px',
+    background: 'none',
+    border: '1.5px solid #e5e5e5',
+    borderRadius: '10px',
+    padding: '6px 12px',
+    cursor: 'pointer',
+    lineHeight: 1,
+  },
+  validationThanks: {
+    fontSize: '13px',
+    color: '#888',
+    fontWeight: 600,
+    textAlign: 'center',
+    padding: '4px 0',
   },
 }

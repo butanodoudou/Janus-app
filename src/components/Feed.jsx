@@ -32,6 +32,7 @@ export default function Feed({ userId, isGuest }) {
         text: s.text || '',
         option_a: s.option_a,
         option_b: s.option_b,
+        _community: true,
       }))
 
       const merged = [...QUESTIONS, ...approved]
