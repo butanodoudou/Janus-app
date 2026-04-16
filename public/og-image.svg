@@ -1,0 +1,33 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg" style="font-family: system-ui, -apple-system, sans-serif;">
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#fafafa"/>
+
+  <!-- Accent top bar -->
+  <rect width="1200" height="8" fill="#7F77DD"/>
+
+  <!-- Card A -->
+  <rect x="100" y="180" width="440" height="280" rx="24" fill="#ffffff" stroke="#e5e5e5" stroke-width="2"/>
+  <rect x="124" y="210" width="48" height="48" rx="12" fill="#7F77DD"/>
+  <text x="148" y="241" text-anchor="middle" fill="#ffffff" font-size="22" font-weight="800">A</text>
+  <text x="190" y="234" fill="#111111" font-size="20" font-weight="700">Savoir lire</text>
+  <text x="190" y="258" fill="#111111" font-size="20" font-weight="700">dans les pensées</text>
+  <text x="124" y="430" fill="#aaaaaa" font-size="16" font-weight="600">43%</text>
+
+  <!-- Card B -->
+  <rect x="660" y="180" width="440" height="280" rx="24" fill="#ffffff" stroke="#7F77DD" stroke-width="3"/>
+  <rect x="684" y="210" width="48" height="48" rx="12" fill="#e5e5e5"/>
+  <text x="708" y="241" text-anchor="middle" fill="#888888" font-size="22" font-weight="800">B</text>
+  <text x="750" y="234" fill="#111111" font-size="20" font-weight="700">Devenir invisible</text>
+  <text x="750" y="258" fill="#111111" font-size="20" font-weight="700">quand tu veux</text>
+  <text x="684" y="430" fill="#7F77DD" font-size="16" font-weight="700">57%</text>
+
+  <!-- VS pill -->
+  <circle cx="600" cy="320" r="36" fill="#7F77DD"/>
+  <text x="600" y="328" text-anchor="middle" fill="#ffffff" font-size="18" font-weight="800">ou</text>
+
+  <!-- Brand -->
+  <text x="600" y="110" text-anchor="middle" fill="#7F77DD" font-size="52" font-weight="800" letter-spacing="-1">d·lemm</text>
+
+  <!-- Tagline -->
+  <text x="600" y="550" text-anchor="middle" fill="#aaaaaa" font-size="22" font-weight="600">Des dlemms sans bonne réponse — juste ton instinct.</text>
+</svg>
