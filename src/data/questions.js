@@ -1,10 +1,11 @@
 export const CATEGORIES = {
-  moral:    { label: 'Moral',    color: '#7F77DD' },
-  amour:    { label: 'Amour',    color: '#D4537E' },
-  identite: { label: 'Identité', color: '#BA7517' },
-  societe:  { label: 'Société',  color: '#378ADD' },
-  travail:  { label: 'Travail',  color: '#1D9E75' },
-  vie:      { label: 'Vie',      color: '#0F6E56' },
+  moral:      { label: 'Moral',        color: '#7F77DD' },
+  amour:      { label: 'Amour',        color: '#D4537E' },
+  identite:   { label: 'Identité',     color: '#BA7517' },
+  societe:    { label: 'Société',      color: '#378ADD' },
+  travail:    { label: 'Travail',      color: '#1D9E75' },
+  vie:        { label: 'Vie',          color: '#0F6E56' },
+  superpower: { label: 'Super Pouvoir', color: '#E8640C' },
 }
 
 export const QUESTIONS = [
@@ -77,5 +78,47 @@ export const QUESTIONS = [
     text: "La justice commet une erreur irréparable.",
     option_a: "Tu es innocent mais condamné à la prison à vie.",
     option_b: "Tu es coupable mais libre — et tu le resteras toujours.",
+  },
+  {
+    id: 'q11',
+    category: 'superpower',
+    text: "Tu peux devenir invisible, mais ça s'active inconsciemment à chaque fois que tu fermes les yeux.",
+    option_a: "J'accepte.",
+    option_b: "Je refuse.",
+  },
+  {
+    id: 'q12',
+    category: 'superpower',
+    text: "Tu peux lire dans les pensées, mais uniquement celles des gens qui te trouvent antipathique.",
+    option_a: "J'accepte.",
+    option_b: "Je refuse.",
+  },
+  {
+    id: 'q13',
+    category: 'superpower',
+    text: "Tu peux voler, mais seulement à 3 km/h.",
+    option_a: "J'accepte.",
+    option_b: "Je refuse.",
+  },
+  {
+    id: 'q14',
+    category: 'superpower',
+    text: "Tu ne vieillis plus jamais, mais tu te réveilles chaque matin avec la Macarena dans la tête.",
+    option_a: "J'accepte.",
+    option_b: "Je refuse.",
+  },
+  {
+    id: 'q15',
+    category: 'superpower',
+    text: "Tu peux arrêter le temps, mais toi aussi tu es figé — tu vois juste tout en pause.",
+    option_a: "J'accepte.",
+    option_b: "Je refuse.",
+  },
+  {
+    id: 'q16',
+    category: 'superpower',
+    text: "Tu guéris instantanément de tout, mais tu ressens deux fois plus la douleur avant de guérir.",
+    option_a: "J'accepte.",
+    option_b: "Je refuse.",
   },
 ]

@@ -36,7 +36,7 @@ export default function Feed() {
       }
       setVotedIds(ids)
 
-      // Fusionne questions fixes + soumissions approuvées
+      // Fusionne questions fixes + soumissions approuvées, puis mélange
       const approved = (submissionsRes.data || []).map(s => ({
         id: s.id,
         category: s.category,
@@ -44,7 +44,12 @@ export default function Feed() {
         option_a: s.option_a,
         option_b: s.option_b,
       }))
-      setAllQuestions([...QUESTIONS, ...approved])
+      const merged = [...QUESTIONS, ...approved]
+      for (let i = merged.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1))
+        ;[merged[i], merged[j]] = [merged[j], merged[i]]
+      }
+      setAllQuestions(merged)
     }
     load()
   }, [])
