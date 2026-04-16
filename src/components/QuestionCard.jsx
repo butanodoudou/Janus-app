@@ -116,14 +116,12 @@ export default function QuestionCard({ question, userId, onVoted, onNext }) {
             </div>
           </div>
 
-          {question._community && (
-            <ValidationRow
-              questionId={question.id}
-              userId={userId}
-              validation={validation}
-              onValidate={setValidation}
-            />
-          )}
+          <ValidationRow
+            questionId={question.id}
+            userId={userId}
+            validation={validation}
+            onValidate={setValidation}
+          />
 
           <Comments
             questionId={question.id}
