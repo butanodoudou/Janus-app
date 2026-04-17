@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from 'react'
+import { useState, useEffect, useRef, memo, useMemo } from 'react'
 import html2canvas from 'html2canvas'
 import { supabase } from '../lib/supabase.js'
 import { CATEGORIES } from '../data/questions.js'
@@ -24,27 +24,38 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
   const currentDragXRef = useRef(0)
   const triggerVoteRef = useRef(null)
 
+  // Randomise l'ordre A/B pour éviter le biais de position
+  const flipped = useMemo(() => Math.random() < 0.5, [question.id])
+  const displayA = flipped ? question.option_b : question.option_a
+  const displayB = flipped ? question.option_a : question.option_b
+  // Reconvertit le choix affiché (A/B) en choix réel (option_a/option_b)
+  function toRealChoice(displayChoice) {
+    if (!flipped) return displayChoice
+    return displayChoice === 'A' ? 'B' : 'A'
+  }
+
   const category = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
-  const { pctA, pctB, total } = calcPct(counts)
+  const { pctA, pctB, total } = calcPct(flipped ? { A: counts.B, B: counts.A } : counts)
   const dragProgress = Math.max(-1, Math.min(1, dragX / THRESHOLD))
   const aOpacity = Math.max(0, dragProgress)
   const bOpacity = Math.max(0, -dragProgress)
 
-  async function triggerVote(choice) {
+  async function triggerVote(displayChoice) {
     if (voted) return
-    setDragX(choice === 'A' ? 600 : -600)
+    setDragX(displayChoice === 'A' ? 600 : -600)
     isDraggingRef.current = false
     setIsDragging(false)
     await new Promise(r => setTimeout(r, 260))
-    await castVote(choice)
+    await castVote(displayChoice)
     setDragX(0)
   }
   triggerVoteRef.current = triggerVote
 
-  async function castVote(choice) {
+  async function castVote(displayChoice) {
     if (voted) return
-    setCounts(prev => ({ ...prev, [choice]: prev[choice] + 1 }))
-    setVoted(choice)
+    const realChoice = toRealChoice(displayChoice)
+    setCounts(prev => ({ ...prev, [realChoice]: prev[realChoice] + 1 }))
+    setVoted(displayChoice)
     onVoted(question.id)
 
     setTimeout(() => {
@@ -54,7 +65,7 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
     await supabase.from('votes').insert({
       user_id: userId,
       question_id: question.id,
-      choice,
+      choice: realChoice,
       date: TODAY,
     })
 
@@ -220,7 +231,7 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
                 onClick={() => triggerVoteRef.current('A')}
               >
                 <span style={{ ...styles.optionLabel, background: '#111', color: '#fff' }}>A</span>
-                <span style={styles.optionText}>{question.option_a}</span>
+                <span style={styles.optionText}>{displayA}</span>
               </div>
 
               <div style={styles.orRow}>
@@ -234,7 +245,7 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
                 onClick={() => triggerVoteRef.current('B')}
               >
                 <span style={{ ...styles.optionLabel, background: '#111', color: '#fff' }}>B</span>
-                <span style={styles.optionText}>{question.option_b}</span>
+                <span style={styles.optionText}>{displayB}</span>
               </div>
             </div>
 
@@ -250,8 +261,8 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
         {voted && (
           <>
             <div style={styles.results}>
-              <ResultBar label="A" text={question.option_a} pct={pctA} chosen={voted === 'A'} color={category.color} />
-              <ResultBar label="B" text={question.option_b} pct={pctB} chosen={voted === 'B'} color={category.color} />
+              <ResultBar label="A" text={displayA} pct={pctA} chosen={voted === 'A'} color={category.color} />
+              <ResultBar label="B" text={displayB} pct={pctB} chosen={voted === 'B'} color={category.color} />
             </div>
 
             <div ref={afterVoteRef} style={styles.afterVote}>
