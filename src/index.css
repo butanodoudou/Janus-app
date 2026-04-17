@@ -45,3 +45,10 @@ input:focus {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@keyframes flicker {
+  0%, 100% { transform: scale(1) rotate(-2deg); }
+  25%       { transform: scale(1.08) rotate(2deg); }
+  50%       { transform: scale(0.95) rotate(-1deg); }
+  75%       { transform: scale(1.05) rotate(1deg); }
+}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { QUESTIONS, CATEGORIES } from '../data/questions.js'
-import { calcPct } from '../lib/utils.js'
+import { calcPct, calcStreak, STREAK_MILESTONES } from '../lib/utils.js'
 import { calcVoteBadge, calcContribBadge, getCategoryColor, CATEGORY_KEYS, LEVEL_DOTS } from '../lib/badges.js'
 import Comments from './Comments.jsx'
 import AuthScreen from './AuthScreen.jsx'
@@ -41,7 +41,8 @@ export default function Profile({ user, userId }) {
       if (data !== undefined) {
         const total = (data || []).length
         const todayCount = (data || []).filter(v => v.date === TODAY).length
-        setStats({ total, todayCount })
+        const allDates = (data || []).map(v => v.date).filter(Boolean)
+        setStats({ total, todayCount, streak: calcStreak(allDates) })
 
         const entries = (data || []).map(vote => {
           const question = QUESTIONS.find(q => q.id === vote.question_id)
@@ -130,6 +131,8 @@ export default function Profile({ user, userId }) {
         </div>
       )}
 
+      <StreakCard streak={stats.streak} />
+
       <div style={{ ...styles.cards, gridTemplateColumns: 'repeat(2, 1fr)' }}>
         <StatCard label="Dlemms répondus" value={stats.total} accent="#7F77DD" />
         <StatCard label="Aujourd'hui" value={stats.todayCount} accent="#D4537E" />
@@ -175,6 +178,93 @@ export default function Profile({ user, userId }) {
       )}
     </div>
   )
+}
+
+function StreakCard({ streak }) {
+  const { current, record } = streak
+  const active = current >= 3
+  const earned = STREAK_MILESTONES.filter(m => current >= m.days)
+  const next = STREAK_MILESTONES.find(m => current < m.days)
+  const prev = earned[earned.length - 1]
+
+  return (
+    <div style={{
+      ...streakStyles.card,
+      background: active ? '#fff9f0' : '#fff',
+      borderColor: active ? '#FF6B1A30' : '#e5e5e5',
+    }}>
+      <div style={streakStyles.top}>
+        <div style={streakStyles.left}>
+          <span style={{
+            fontSize: '40px',
+            lineHeight: 1,
+            display: 'inline-block',
+            animation: active ? 'flicker 1.4s ease-in-out infinite' : 'none',
+          }}>
+            {current === 0 ? '🩶' : current < 3 ? '🔥' : prev?.emoji || '🔥'}
+          </span>
+          <div>
+            <p style={{ ...streakStyles.days, color: active ? '#FF6B1A' : '#111' }}>
+              {current} jour{current > 1 ? 's' : ''}
+            </p>
+            <p style={streakStyles.label}>
+              {current === 0 ? 'Commence aujourd\'hui !' : current < 3 ? 'Continue !' : prev?.label}
+            </p>
+          </div>
+        </div>
+        {record > current && (
+          <div style={streakStyles.record}>
+            <p style={streakStyles.recordVal}>{record}</p>
+            <p style={streakStyles.recordLabel}>record</p>
+          </div>
+        )}
+      </div>
+
+      {next && (
+        <div style={streakStyles.progressRow}>
+          <div style={streakStyles.progressTrack}>
+            <div style={{
+              ...streakStyles.progressFill,
+              width: `${Math.min(100, (current / next.days) * 100)}%`,
+              background: active ? '#FF6B1A' : '#7F77DD',
+            }} />
+          </div>
+          <p style={streakStyles.progressLabel}>
+            {next.emoji} {next.label} dans {next.days - current} jour{next.days - current > 1 ? 's' : ''}
+          </p>
+        </div>
+      )}
+
+      {!next && current >= 100 && (
+        <p style={{ ...streakStyles.progressLabel, textAlign: 'center', color: '#FF6B1A', fontWeight: 800 }}>
+          💀 Tu es une légende
+        </p>
+      )}
+    </div>
+  )
+}
+
+const streakStyles = {
+  card: {
+    borderRadius: '16px',
+    padding: '16px',
+    border: '1px solid',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+    transition: 'background 0.3s',
+  },
+  top: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
+  left: { display: 'flex', alignItems: 'center', gap: '14px' },
+  days: { fontSize: '26px', fontWeight: 800, lineHeight: 1 },
+  label: { fontSize: '13px', color: '#888', fontWeight: 600, marginTop: '2px' },
+  record: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' },
+  recordVal: { fontSize: '20px', fontWeight: 800, color: '#aaa' },
+  recordLabel: { fontSize: '11px', color: '#ccc', fontWeight: 600, textTransform: 'uppercase' },
+  progressRow: { display: 'flex', flexDirection: 'column', gap: '6px' },
+  progressTrack: { height: '6px', background: '#f0f0f0', borderRadius: '3px', overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: '3px', transition: 'width 0.6s ease' },
+  progressLabel: { fontSize: '12px', color: '#aaa', fontWeight: 600 },
 }
 
 const TOTAL_BADGES = CATEGORY_KEYS.length * 2 // 7 vote + 7 contrib
