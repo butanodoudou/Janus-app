@@ -36,6 +36,7 @@ export function calcVoteBadge(category, history) {
   let counted = 0
 
   for (const { vote, counts } of entries) {
+    if (!counts) continue
     const total = counts.A + counts.B
     if (total === 0) continue
     const majorityChoice = counts.A >= counts.B ? 'A' : 'B'
