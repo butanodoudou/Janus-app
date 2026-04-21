@@ -96,8 +96,8 @@ const styles = {
     zIndex: 50,
   },
   logo: {
-    fontFamily: "'Syne', system-ui, sans-serif",
-    fontSize: '22px',
+    fontFamily: "'Unbounded', system-ui, sans-serif",
+    fontSize: '18px',
     fontWeight: 800,
     color: '#7F77DD',
     letterSpacing: '-0.5px',
