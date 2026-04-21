@@ -104,7 +104,6 @@ export default function SubmitForm({ userId, onBack, initialData = null, editId 
               onChange={e => update('text', e.target.value)}
               rows={4}
               maxLength={200}
-              autoFocus
             />
             <p style={{
               ...styles.counter,
@@ -122,25 +121,35 @@ export default function SubmitForm({ userId, onBack, initialData = null, editId 
             <p style={styles.hint}>Deux choix opposés, aussi difficiles l'un que l'autre.</p>
             <div style={styles.optionRow}>
               <span style={styles.optionBadge}>A</span>
-              <textarea
-                style={styles.optionInput}
-                placeholder="Première option…"
-                value={form.option_a}
-                onChange={e => update('option_a', e.target.value)}
-                rows={3}
-                maxLength={150}
-              />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <textarea
+                  style={styles.optionInput}
+                  placeholder="Première option…"
+                  value={form.option_a}
+                  onChange={e => update('option_a', e.target.value)}
+                  rows={3}
+                  maxLength={150}
+                />
+                <p style={{ ...styles.counter, color: form.option_a.length > 130 ? '#e53e3e' : '#ccc' }}>
+                  {form.option_a.length}/150
+                </p>
+              </div>
             </div>
             <div style={styles.optionRow}>
-              <span style={{ ...styles.optionBadge, background: '#f0f0f0', color: '#444' }}>B</span>
-              <textarea
-                style={styles.optionInput}
-                placeholder="Deuxième option…"
-                value={form.option_b}
-                onChange={e => update('option_b', e.target.value)}
-                rows={3}
-                maxLength={150}
-              />
+              <span style={{ ...styles.optionBadge, background: '#111' }}>B</span>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <textarea
+                  style={styles.optionInput}
+                  placeholder="Deuxième option…"
+                  value={form.option_b}
+                  onChange={e => update('option_b', e.target.value)}
+                  rows={3}
+                  maxLength={150}
+                />
+                <p style={{ ...styles.counter, color: form.option_b.length > 130 ? '#e53e3e' : '#ccc' }}>
+                  {form.option_b.length}/150
+                </p>
+              </div>
             </div>
           </>
         )}
@@ -311,7 +320,7 @@ const styles = {
     marginTop: '4px',
   },
   optionInput: {
-    flex: 1,
+    width: '100%',
     padding: '12px',
     fontSize: '15px',
     fontFamily: 'inherit',

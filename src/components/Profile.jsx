@@ -13,6 +13,7 @@ export default function Profile({ user, userId }) {
   const [contribCounts, setContribCounts] = useState({})
   const [selected, setSelected] = useState(null)
   const [selectingBadge, setSelectingBadge] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
 
   const username = user?.user_metadata?.username
   const selectedBadge = user?.user_metadata?.selected_badge || null
@@ -45,8 +46,22 @@ export default function Profile({ user, userId }) {
         const allDates = (data || []).map(v => v.date).filter(Boolean)
         setStats({ total, todayCount, streak: calcStreak(allDates) })
 
+        // Charger les soumissions approuvées pour les votes sur IDs UUID
+        const votedQIds = (data || []).map(v => v.question_id)
+        const unknownIds = votedQIds.filter(id => !QUESTIONS.find(q => q.id === id))
+        let approvedSubs = []
+        if (unknownIds.length > 0) {
+          const { data: subs } = await supabase
+            .from('submissions')
+            .select('id, category, text, option_a, option_b')
+            .in('id', unknownIds)
+            .eq('status', 'approved')
+          approvedSubs = subs || []
+        }
+        const allQuestions = [...QUESTIONS, ...approvedSubs]
+
         const entries = (data || []).map(vote => {
-          const question = QUESTIONS.find(q => q.id === vote.question_id)
+          const question = allQuestions.find(q => q.id === vote.question_id)
           if (!question) return null
           return { vote, question }
         }).filter(Boolean)
@@ -113,10 +128,20 @@ export default function Profile({ user, userId }) {
             </p>
           )}
         </div>
-        <button style={styles.logoutBtn} onClick={() => supabase.auth.signOut()}>
-          Déconnexion
-        </button>
+        {showLogoutConfirm ? (
+          <div style={styles.logoutConfirm}>
+            <span style={styles.logoutConfirmText}>Déconnexion ?</span>
+            <button style={{ ...styles.logoutConfirmBtn, color: '#e53e3e' }} onClick={() => supabase.auth.signOut()}>Oui</button>
+            <button style={styles.logoutConfirmBtn} onClick={() => setShowLogoutConfirm(false)}>Non</button>
+          </div>
+        ) : (
+          <button style={styles.logoutBtn} onClick={() => setShowLogoutConfirm(true)}>
+            Déconnexion
+          </button>
+        )}
       </div>
+
+      <StreakCard streak={stats.streak} />
 
       {communityStats && (
         <div style={styles.community}>
@@ -131,8 +156,6 @@ export default function Profile({ user, userId }) {
           </div>
         </div>
       )}
-
-      <StreakCard streak={stats.streak} />
 
       <div style={{ ...styles.cards, gridTemplateColumns: 'repeat(2, 1fr)' }}>
         <StatCard label="Dlemms répondus" value={stats.total} accent="#7F77DD" />
@@ -484,6 +507,15 @@ const styles = {
     background: 'none', border: '1px solid #e5e5e5', borderRadius: '8px',
     padding: '6px 12px', fontSize: '13px', color: '#888', fontWeight: 600,
     cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0,
+  },
+  logoutConfirm: {
+    display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0,
+  },
+  logoutConfirmText: { fontSize: '13px', color: '#888', fontWeight: 600 },
+  logoutConfirmBtn: {
+    background: 'none', border: '1px solid #e5e5e5', borderRadius: '8px',
+    padding: '4px 10px', fontSize: '13px', color: '#444', fontWeight: 700,
+    cursor: 'pointer', fontFamily: 'inherit',
   },
   center: { display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' },
   loader: {

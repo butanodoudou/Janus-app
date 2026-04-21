@@ -24,6 +24,15 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
   const currentDragXRef = useRef(0)
   const triggerVoteRef = useRef(null)
 
+  // Swipe hint animation au premier lancement
+  useEffect(() => {
+    if (localStorage.getItem('dlemm_swipe_shown')) return
+    const t1 = setTimeout(() => setDragX(30), 800)
+    const t2 = setTimeout(() => setDragX(0), 1200)
+    const t3 = setTimeout(() => localStorage.setItem('dlemm_swipe_shown', '1'), 1400)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+  }, [])
+
   // Randomise l'ordre A/B pour éviter le biais de position
   const flipped = useMemo(() => Math.random() < 0.5, [question.id])
   const displayA = flipped ? question.option_b : question.option_a
@@ -145,6 +154,23 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
   async function handleShare() {
     if (sharing) return
     setSharing(true)
+
+    // Native share en priorité (95% des mobiles)
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'd·lemm',
+          text: `${question.option_a} ou ${question.option_b} ?`,
+        })
+        setSharing(false)
+        return
+      } catch (e) {
+        if (e.name === 'AbortError') { setSharing(false); return }
+        // non supporté ou erreur → fallback canvas
+      }
+    }
+
+    // Fallback : génère une image partageable
     try {
       const canvas = await html2canvas(shareCardRef.current, {
         scale: 2,
@@ -230,7 +256,7 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
                 style={styles.option}
                 onClick={() => triggerVoteRef.current('A')}
               >
-                <span style={{ ...styles.optionLabel, background: '#111', color: '#fff' }}>A</span>
+                <span style={{ ...styles.optionLabel, background: category.color, color: '#fff' }}>A</span>
                 <span style={styles.optionText}>{displayA}</span>
               </div>
 
@@ -267,15 +293,20 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
 
             <div ref={afterVoteRef} style={styles.afterVote}>
               <p style={styles.totalVotes}>
-                {total.toLocaleString('fr-FR')} personne{total > 1 ? 's' : ''} ont répondu
+                <span style={{ color: category.color, fontWeight: 800, fontSize: '16px' }}>
+                  {voted === 'A' ? pctA : pctB}%
+                </span>
+                {' '}des gens ont choisi comme toi · {total.toLocaleString('fr-FR')} votes
               </p>
               <div style={styles.actionBtns}>
                 <button
                   style={{ ...styles.shareBtn, opacity: sharing ? 0.6 : 1 }}
                   onClick={handleShare}
                   disabled={sharing}
+                  title="Partager"
+                  aria-label="Partager"
                 >
-                  {sharing ? '…' : <><ShareIcon /> Partager</>}
+                  {sharing ? '…' : <ShareIcon />}
                 </button>
                 <button style={{ ...styles.nextBtn, background: category.color }} onClick={onNext}>
                   Suivant <ChevronIcon />
@@ -404,6 +435,7 @@ const styles = {
     padding: '20px 16px',
     display: 'flex',
     flexDirection: 'column',
+    animation: 'cardEnter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
   },
   card: {
     background: '#fff',
@@ -565,6 +597,7 @@ const styles = {
     color: '#aaa',
     fontWeight: 600,
     textAlign: 'center',
+    lineHeight: 1.5,
   },
   actionBtns: {
     display: 'flex',
@@ -573,13 +606,13 @@ const styles = {
   shareBtn: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    padding: '14px 18px',
+    justifyContent: 'center',
+    width: '52px',
+    flexShrink: 0,
+    padding: '14px',
     background: '#7F77DD',
     border: 'none',
     borderRadius: '12px',
-    fontSize: '14px',
-    fontWeight: 700,
     color: '#fff',
     cursor: 'pointer',
     fontFamily: 'inherit',

@@ -1,7 +1,7 @@
 const TABS = [
   { id: 'feed',      label: 'Feed',      icon: IconFeed },
   { id: 'submit',    label: 'Proposer',  icon: IconPlus },
-  { id: 'mydlemms',  label: 'Mes dlemms', icon: IconList },
+  { id: 'mydlemms',  label: 'Mes',        icon: IconList },
   { id: 'profile',   label: 'Profil',    icon: IconUser },
 ]
 
@@ -96,8 +96,10 @@ const styles = {
     display: 'flex',
     gap: '4px',
     padding: '6px 8px',
-    borderTop: '1px solid #eee',
-    background: '#fafafa',
+    borderTop: '1px solid rgba(0,0,0,0.07)',
+    background: 'rgba(250,250,250,0.85)',
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
     paddingBottom: 'calc(6px + env(safe-area-inset-bottom))',
     zIndex: 100,
   },

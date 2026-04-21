@@ -1,5 +1,5 @@
 export const CATEGORIES = {
-  moral:      { label: 'Moral',        color: '#7F77DD' },
+  moral:      { label: 'Moral',        color: '#5E57CC' },
   amour:      { label: 'Amour',        color: '#D4537E' },
   identite:   { label: 'Identité',     color: '#BA7517' },
   societe:    { label: 'Société',      color: '#378ADD' },

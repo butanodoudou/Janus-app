@@ -44,25 +44,27 @@ export default function App() {
       </header>
 
       <main style={styles.main}>
-        {view === 'feed' && <Feed userId={userId} isGuest={isGuest} userBadge={userBadge} />}
-        {view === 'submit' && (
-          <SubmitForm
-            userId={userId}
-            onBack={() => setView('feed')}
-            initialData={reformulateData}
-            editId={reformulateData?.id || null}
-            onDone={() => { setReformulateData(null); setView('mydlemms') }}
-          />
-        )}
-        {view === 'mydlemms' && (
-          <MyDlemms
-            user={user}
-            userId={userId}
-            onReformulate={s => { setReformulateData(s); setView('submit') }}
-          />
-        )}
-        {view === 'profile' && <Profile user={user} userId={userId} />}
-        {view === 'admin' && isAdmin && <AdminPanel />}
+        <div key={view} style={{ animation: 'fadeIn 0.18s ease-out' }}>
+          {view === 'feed' && <Feed userId={userId} isGuest={isGuest} userBadge={userBadge} />}
+          {view === 'submit' && (
+            <SubmitForm
+              userId={userId}
+              onBack={() => setView('feed')}
+              initialData={reformulateData}
+              editId={reformulateData?.id || null}
+              onDone={() => { setReformulateData(null); setView('mydlemms') }}
+            />
+          )}
+          {view === 'mydlemms' && (
+            <MyDlemms
+              user={user}
+              userId={userId}
+              onReformulate={s => { setReformulateData(s); setView('submit') }}
+            />
+          )}
+          {view === 'profile' && <Profile user={user} userId={userId} />}
+          {view === 'admin' && isAdmin && <AdminPanel />}
+        </div>
       </main>
 
       <Nav view={view} setView={v => { setReformulateData(null); setView(v) }} isAdmin={isAdmin} />
@@ -87,13 +89,14 @@ const styles = {
   },
   header: {
     padding: '16px 20px 14px',
-    borderBottom: '1px solid #efefef',
-    background: '#fafafa',
+    boxShadow: '0 1px 0 #ebebeb',
+    background: '#fff',
     position: 'sticky',
     top: 0,
     zIndex: 50,
   },
   logo: {
+    fontFamily: "'Syne', system-ui, sans-serif",
     fontSize: '22px',
     fontWeight: 800,
     color: '#7F77DD',
