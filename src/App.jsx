@@ -4,16 +4,20 @@ import SubmitForm from './components/SubmitForm.jsx'
 import Profile from './components/Profile.jsx'
 import Activity from './components/Activity.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
+import PinModal from './components/PinModal.jsx'
 import Nav from './components/Nav.jsx'
 import { supabase } from './lib/supabase.js'
 import { getUserId } from './lib/userId.js'
 
-const ADMIN_ID = import.meta.env.VITE_ADMIN_ID
+const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN
 
 export default function App() {
-  const [session, setSession] = useState(undefined) // undefined=chargement, null=invité
+  const [session, setSession] = useState(undefined)
   const [view, setView] = useState('feed')
-  const [reformulateData, setReformulateData] = useState(null) // { id, text, option_a, option_b, category }
+  const [reformulateData, setReformulateData] = useState(null)
+  const [tapCount, setTapCount] = useState(0)
+  const [showPin, setShowPin] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -34,14 +38,39 @@ export default function App() {
   const user = session?.user || null
   const isGuest = !user
   const userId = user?.id || getUserId()
-  const isAdmin = Boolean(ADMIN_ID && user?.id === ADMIN_ID)
   const userBadge = user?.user_metadata?.selected_badge || null
+
+  function handleLogoTap() {
+    const next = tapCount + 1
+    setTapCount(next)
+    if (next >= 5) {
+      setTapCount(0)
+      setShowPin(true)
+    }
+  }
+
+  function handlePinConfirm(pin) {
+    if (pin === ADMIN_PIN) {
+      setIsAdmin(true)
+      setShowPin(false)
+      setView('admin')
+      return true
+    }
+    return false
+  }
 
   return (
     <div className="app">
       <header style={styles.header}>
-        <span style={styles.logo}>d·lemm</span>
+        <span style={styles.logo} onClick={handleLogoTap}>d·lemm</span>
       </header>
+
+      {showPin && (
+        <PinModal
+          onConfirm={handlePinConfirm}
+          onClose={() => { setShowPin(false); setTapCount(0) }}
+        />
+      )}
 
       <main style={styles.main}>
         <div key={view} style={{ animation: 'fadeIn 0.18s ease-out' }}>
