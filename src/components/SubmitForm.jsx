@@ -4,9 +4,14 @@ import { CATEGORIES } from '../data/questions.js'
 
 const STEP_LABELS = ['Le dlemm', 'Les options', 'Catégorie', 'Confirmation']
 
-export default function SubmitForm({ userId, onBack }) {
+export default function SubmitForm({ userId, onBack, initialData = null, editId = null, onDone = null }) {
+  const isEdit = Boolean(editId)
   const [step, setStep] = useState(0)
-  const [form, setForm] = useState({ text: '', option_a: '', option_b: '', category: '' })
+  const [form, setForm] = useState(
+    initialData
+      ? { text: initialData.text || '', option_a: initialData.option_a || '', option_b: initialData.option_b || '', category: initialData.category || '' }
+      : { text: '', option_a: '', option_b: '', category: '' }
+  )
   const [submitting, setSubmitting] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
@@ -25,14 +30,16 @@ export default function SubmitForm({ userId, onBack }) {
 
   async function submit() {
     setSubmitting(true)
-    const { error: err } = await supabase.from('submissions').insert({
+    const payload = {
       text: form.text.trim(),
       option_a: form.option_a.trim(),
       option_b: form.option_b.trim(),
       category: form.category,
       status: 'pending',
-      user_id: userId || null,
-    })
+    }
+    const { error: err } = isEdit
+      ? await supabase.from('submissions').update({ ...payload, rejection_reason: null }).eq('id', editId)
+      : await supabase.from('submissions').insert({ ...payload, user_id: userId || null })
     setSubmitting(false)
     if (err) {
       setError("Erreur lors de l'envoi. Réessaie.")
@@ -45,9 +52,13 @@ export default function SubmitForm({ userId, onBack }) {
     return (
       <div style={styles.done}>
         <div style={styles.doneEmoji}>🙌</div>
-        <h2 style={styles.doneTitle}>Dlemm soumis !</h2>
-        <p style={styles.doneText}>Il sera examiné avant d'apparaître dans le feed.</p>
-        <button style={styles.backBtn} onClick={onBack}>Retour au feed</button>
+        <h2 style={styles.doneTitle}>{isEdit ? 'Dlemm mis à jour !' : 'Dlemm soumis !'}</h2>
+        <p style={styles.doneText}>
+          {isEdit ? 'Ta nouvelle version sera examinée.' : 'Il sera examiné avant d\'apparaître dans le feed.'}
+        </p>
+        <button style={styles.backBtn} onClick={onDone || onBack}>
+          {isEdit ? 'Voir mes dlemms' : 'Retour au feed'}
+        </button>
       </div>
     )
   }

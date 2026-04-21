@@ -1,7 +1,8 @@
 const TABS = [
-  { id: 'feed',    label: 'Feed',     icon: IconFeed },
-  { id: 'submit',  label: 'Proposer', icon: IconPlus },
-  { id: 'profile', label: 'Profil',   icon: IconUser },
+  { id: 'feed',      label: 'Feed',      icon: IconFeed },
+  { id: 'submit',    label: 'Proposer',  icon: IconPlus },
+  { id: 'mydlemms',  label: 'Mes dlemms', icon: IconList },
+  { id: 'profile',   label: 'Profil',    icon: IconUser },
 ]
 
 export default function Nav({ view, setView, isAdmin }) {
@@ -59,6 +60,19 @@ function IconUser({ active }) {
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
+    </svg>
+  )
+}
+
+function IconList({ active }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={active ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">
+      <line x1="8" y1="6" x2="21" y2="6" />
+      <line x1="8" y1="12" x2="21" y2="12" />
+      <line x1="8" y1="18" x2="21" y2="18" />
+      <line x1="3" y1="6" x2="3.01" y2="6" />
+      <line x1="3" y1="12" x2="3.01" y2="12" />
+      <line x1="3" y1="18" x2="3.01" y2="18" />
     </svg>
   )
 }

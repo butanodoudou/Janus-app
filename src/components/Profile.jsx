@@ -11,8 +11,6 @@ export default function Profile({ user, userId }) {
   const [communityStats, setCommunityStats] = useState(null)
   const [history, setHistory] = useState([])
   const [contribCounts, setContribCounts] = useState({})
-  const [mySubmissions, setMySubmissions] = useState([])
-  const [showSubmissions, setShowSubmissions] = useState(false)
   const [selected, setSelected] = useState(null)
   const [selectingBadge, setSelectingBadge] = useState(false)
 
@@ -27,14 +25,13 @@ export default function Profile({ user, userId }) {
       const [userVotesRes, totalVotesRes, submissionsRes] = await Promise.all([
         supabase.from('votes').select('question_id, choice, date, created_at').eq('user_id', userId).order('created_at', { ascending: false }),
         supabase.from('votes').select('user_id', { count: 'exact', head: false }),
-        supabase.from('submissions').select('id, category, text, option_a, option_b, status, created_at').eq('user_id', userId).order('created_at', { ascending: false }),
+        supabase.from('submissions').select('category, status').eq('user_id', userId),
       ])
 
       const uniqueUsers = new Set((totalVotesRes.data || []).map(v => v.user_id)).size
       setCommunityStats({ totalVotes: totalVotesRes.count || 0, uniqueUsers })
 
       const allSubs = submissionsRes.data || []
-      setMySubmissions(allSubs)
       const counts = {}
       for (const s of allSubs.filter(s => s.status === 'approved')) {
         counts[s.category] = (counts[s.category] || 0) + 1
@@ -149,16 +146,6 @@ export default function Profile({ user, userId }) {
         onSelect={handleSelectBadge}
       />
 
-      {mySubmissions.length > 0 && (
-        <button style={styles.submissionsBtn} onClick={() => setShowSubmissions(true)}>
-          <span>Mes dlemms proposés</span>
-          <span style={styles.submissionsBtnRight}>
-            <span style={styles.submissionsBtnCount}>{mySubmissions.length}</span>
-            <span style={{ color: '#ccc' }}>→</span>
-          </span>
-        </button>
-      )}
-
       {history.length > 0 && (
         <div style={styles.historySection}>
           <h3 style={styles.historyHeading}>Mes réponses</h3>
@@ -180,13 +167,6 @@ export default function Profile({ user, userId }) {
         <span style={styles.userIdLabel}>{user.email}</span>
         <span style={styles.userIdValue}>Copier</span>
       </button>
-
-      {showSubmissions && (
-        <SubmissionsModal
-          submissions={mySubmissions}
-          onClose={() => setShowSubmissions(false)}
-        />
-      )}
 
       {selected && (
         <DetailModal
@@ -376,59 +356,6 @@ function BadgePill({ badge, selected, onSelect }) {
       <p style={styles.badgePillHow}>{badgeEarnedText(badge)}</p>
     </button>
   )
-}
-
-const STATUS_CONFIG = {
-  pending:  { label: 'En attente',  color: '#BA7517', bg: '#FFF8E7' },
-  approved: { label: 'Approuvé',    color: '#1D9E75', bg: '#F0FBF7' },
-  rejected: { label: 'Refusé',      color: '#E53E3E', bg: '#FFF5F5' },
-}
-
-function SubmissionsModal({ submissions, onClose }) {
-  return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modal} onClick={e => e.stopPropagation()}>
-        <div style={styles.handle} />
-        <div style={styles.modalScroll}>
-          <h3 style={{ ...styles.historyHeading, marginBottom: '4px' }}>Mes dlemms proposés</h3>
-          {submissions.map(s => {
-            const cat = CATEGORIES[s.category] || { label: s.category, color: '#7F77DD' }
-            const status = STATUS_CONFIG[s.status] || STATUS_CONFIG.pending
-            return (
-              <div key={s.id} style={subStyles.card}>
-                <div style={subStyles.top}>
-                  <span style={{ ...styles.badge, background: cat.color }}>{cat.label}</span>
-                  <span style={{ ...subStyles.statusPill, color: status.color, background: status.bg }}>
-                    {status.label}
-                  </span>
-                </div>
-                {s.text && <p style={subStyles.text}>{s.text}</p>}
-                <div style={subStyles.options}>
-                  <span style={subStyles.option}><b>A</b> {s.option_a}</span>
-                  <span style={subStyles.option}><b>B</b> {s.option_b}</span>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const subStyles = {
-  card: {
-    background: '#fff', borderRadius: '14px', padding: '14px',
-    border: '1px solid #eee', display: 'flex', flexDirection: 'column', gap: '10px',
-  },
-  top: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  statusPill: {
-    fontSize: '11px', fontWeight: 700, padding: '3px 10px',
-    borderRadius: '20px', letterSpacing: '0.02em',
-  },
-  text: { fontSize: '14px', fontWeight: 700, color: '#111', lineHeight: 1.4 },
-  options: { display: 'flex', flexDirection: 'column', gap: '4px' },
-  option: { fontSize: '13px', color: '#666', lineHeight: 1.4 },
 }
 
 function DetailModal({ question, choice, counts, userId, onClose }) {
@@ -625,17 +552,6 @@ const styles = {
   barFill: { height: '100%', borderRadius: '3px', transition: 'width 0.6s ease' },
   barPct: { fontSize: '12px', fontWeight: 700, width: '32px', textAlign: 'right', flexShrink: 0 },
   tapHint: { fontSize: '11px', color: '#ccc', textAlign: 'right', marginTop: '-4px' },
-  submissionsBtn: {
-    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-    padding: '16px', background: '#fff', borderRadius: '14px',
-    border: '1px solid #e5e5e5', cursor: 'pointer', fontFamily: 'inherit',
-    width: '100%', textAlign: 'left', fontSize: '15px', fontWeight: 700, color: '#111',
-  },
-  submissionsBtnRight: { display: 'flex', alignItems: 'center', gap: '8px' },
-  submissionsBtnCount: {
-    background: '#7F77DD', color: '#fff', borderRadius: '20px',
-    fontSize: '12px', fontWeight: 700, padding: '2px 8px',
-  },
   userId: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     padding: '12px 16px', background: '#fff', borderRadius: '12px',

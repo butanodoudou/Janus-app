@@ -123,6 +123,37 @@ src/
 
 ---
 
+## Mémoire projet
+
+Les fichiers mémoire persistent le contexte entre les sessions dans :
+`.claude/projects/C--Users-PC-Documents-repo_git-Janus-app/memory/`
+
+**Quand mettre à jour la mémoire :**
+- Une décision de design ou d'architecture est validée → `feedback_design.md`
+- Un chantier est ouvert, en cours ou bloqué → `project_*.md`
+- Une migration SQL est en attente d'exécution → noter dans le fichier projet concerné
+- Une préférence de collaboration est exprimée → `feedback_*.md`
+
+**Ce qu'on ne met PAS en mémoire :**
+- L'architecture des fichiers (lisible dans le code)
+- Les patterns de code ou les styles (idem)
+- Le contenu du git log ou des commits
+
+**Format d'un fichier mémoire :**
+```
+---
+name: Titre court
+description: Une ligne — utilisée pour juger la pertinence en future session
+type: project | feedback | user | reference
+---
+
+Contenu. Pour project/feedback : commencer par le fait, puis **Why:** et **How to apply:**.
+```
+
+`MEMORY.md` est l'index — une ligne par fichier, sous 150 caractères.
+
+---
+
 ## Roadmap V1
 
 - Auth email / Google (Supabase Auth)

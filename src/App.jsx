@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Feed from './components/Feed.jsx'
 import SubmitForm from './components/SubmitForm.jsx'
 import Profile from './components/Profile.jsx'
+import MyDlemms from './components/MyDlemms.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
 import Nav from './components/Nav.jsx'
 import { supabase } from './lib/supabase.js'
@@ -12,6 +13,7 @@ const ADMIN_ID = import.meta.env.VITE_ADMIN_ID
 export default function App() {
   const [session, setSession] = useState(undefined) // undefined=chargement, null=invité
   const [view, setView] = useState('feed')
+  const [reformulateData, setReformulateData] = useState(null) // { id, text, option_a, option_b, category }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session))
@@ -43,12 +45,27 @@ export default function App() {
 
       <main style={styles.main}>
         {view === 'feed' && <Feed userId={userId} isGuest={isGuest} userBadge={userBadge} />}
-        {view === 'submit' && <SubmitForm userId={userId} onBack={() => setView('feed')} />}
+        {view === 'submit' && (
+          <SubmitForm
+            userId={userId}
+            onBack={() => setView('feed')}
+            initialData={reformulateData}
+            editId={reformulateData?.id || null}
+            onDone={() => { setReformulateData(null); setView('mydlemms') }}
+          />
+        )}
+        {view === 'mydlemms' && (
+          <MyDlemms
+            user={user}
+            userId={userId}
+            onReformulate={s => { setReformulateData(s); setView('submit') }}
+          />
+        )}
         {view === 'profile' && <Profile user={user} userId={userId} />}
         {view === 'admin' && isAdmin && <AdminPanel />}
       </main>
 
-      <Nav view={view} setView={setView} isAdmin={isAdmin} />
+      <Nav view={view} setView={v => { setReformulateData(null); setView(v) }} isAdmin={isAdmin} />
     </div>
   )
 }
