@@ -1,7 +1,7 @@
 const TABS = [
   { id: 'feed',      label: 'Feed',      icon: IconFeed },
   { id: 'submit',    label: 'Proposer',  icon: IconPlus },
-  { id: 'mydlemms',  label: 'Mes',        icon: IconList },
+  { id: 'mydlemms',  label: 'Mes dlemms', icon: IconList },
   { id: 'profile',   label: 'Profil',    icon: IconUser },
 ]
 
@@ -116,7 +116,7 @@ const styles = {
     transition: 'color 0.15s, background 0.15s',
   },
   label: {
-    fontSize: '12px',
+    fontSize: '11px',
     fontWeight: 700,
   },
 }
