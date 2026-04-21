@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import Feed from './components/Feed.jsx'
 import SubmitForm from './components/SubmitForm.jsx'
 import Profile from './components/Profile.jsx'
-import MyDlemms from './components/MyDlemms.jsx'
+import Activity from './components/Activity.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
 import Nav from './components/Nav.jsx'
 import { supabase } from './lib/supabase.js'
@@ -52,11 +52,11 @@ export default function App() {
               onBack={() => setView('feed')}
               initialData={reformulateData}
               editId={reformulateData?.id || null}
-              onDone={() => { setReformulateData(null); setView('mydlemms') }}
+              onDone={() => { setReformulateData(null); setView('activity') }}
             />
           )}
-          {view === 'mydlemms' && (
-            <MyDlemms
+          {view === 'activity' && (
+            <Activity
               user={user}
               userId={userId}
               onReformulate={s => { setReformulateData(s); setView('submit') }}

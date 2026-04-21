@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
-import { QUESTIONS, CATEGORIES } from '../data/questions.js'
+import { CATEGORIES } from '../data/questions.js'
 import { calcPct, calcStreak, STREAK_MILESTONES } from '../lib/utils.js'
 import { calcVoteBadge, calcContribBadge, getCategoryColor, CATEGORY_KEYS, LEVEL_DOTS } from '../lib/badges.js'
 import Comments from './Comments.jsx'
@@ -9,12 +9,10 @@ import AuthScreen from './AuthScreen.jsx'
 export default function Profile({ user, userId }) {
   const [stats, setStats] = useState(null)
   const [communityStats, setCommunityStats] = useState(null)
-  const [history, setHistory] = useState([])
   const [contribCounts, setContribCounts] = useState({})
-  const [selected, setSelected] = useState(null)
   const [selectingBadge, setSelectingBadge] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
-  const [deleteStep, setDeleteStep] = useState(0) // 0=caché, 1=confirmation, 2=en cours, 3=erreur
+  const [deleteStep, setDeleteStep] = useState(0)
 
   const username = user?.user_metadata?.username
   const selectedBadge = user?.user_metadata?.selected_badge || null
@@ -46,45 +44,6 @@ export default function Profile({ user, userId }) {
         const todayCount = (data || []).filter(v => v.date === TODAY).length
         const allDates = (data || []).map(v => v.date).filter(Boolean)
         setStats({ total, todayCount, streak: calcStreak(allDates) })
-
-        // Charger les soumissions approuvées pour les votes sur IDs UUID
-        const votedQIds = (data || []).map(v => v.question_id)
-        const unknownIds = votedQIds.filter(id => !QUESTIONS.find(q => q.id === id))
-        let approvedSubs = []
-        if (unknownIds.length > 0) {
-          const { data: subs } = await supabase
-            .from('submissions')
-            .select('id, category, text, option_a, option_b')
-            .in('id', unknownIds)
-            .eq('status', 'approved')
-          approvedSubs = subs || []
-        }
-        const allQuestions = [...QUESTIONS, ...approvedSubs]
-
-        const entries = (data || []).map(vote => {
-          const question = allQuestions.find(q => q.id === vote.question_id)
-          if (!question) return null
-          return { vote, question }
-        }).filter(Boolean)
-
-        const questionIds = [...new Set((data || []).map(v => v.question_id))]
-        const { data: allVotes } = await supabase
-          .from('votes')
-          .select('question_id, choice')
-          .in('question_id', questionIds)
-
-        const countsMap = {}
-        if (allVotes) {
-          for (const v of allVotes) {
-            if (!countsMap[v.question_id]) countsMap[v.question_id] = { A: 0, B: 0 }
-            countsMap[v.question_id][v.choice]++
-          }
-        }
-
-        setHistory(entries.map(e => ({
-          ...e,
-          counts: countsMap[e.question.id] || { A: 1, B: 0 },
-        })))
       }
     }
     load()
@@ -184,22 +143,6 @@ export default function Profile({ user, userId }) {
         onSelect={handleSelectBadge}
       />
 
-      {history.length > 0 && (
-        <div style={styles.historySection}>
-          <h3 style={styles.historyHeading}>Mes réponses</h3>
-          <div style={styles.historyList}>
-            {history.map(({ vote, question, counts }) => (
-              <HistoryCard
-                key={vote.question_id}
-                question={question}
-                choice={vote.choice}
-                counts={counts}
-                onTap={() => setSelected({ question, choice: vote.choice, counts })}
-              />
-            ))}
-          </div>
-        </div>
-      )}
 
       <button style={styles.userId} onClick={() => navigator.clipboard?.writeText(user.email)}>
         <span style={styles.userIdLabel}>{user.email}</span>
@@ -213,15 +156,6 @@ export default function Profile({ user, userId }) {
         onCancel={() => setDeleteStep(0)}
       />
 
-      {selected && (
-        <DetailModal
-          question={selected.question}
-          choice={selected.choice}
-          counts={selected.counts}
-          userId={userId}
-          onClose={() => setSelected(null)}
-        />
-      )}
     </div>
   )
 }

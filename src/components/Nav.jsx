@@ -1,7 +1,7 @@
 const TABS = [
   { id: 'feed',      label: 'Feed',      icon: IconFeed },
   { id: 'submit',    label: 'Proposer',  icon: IconPlus },
-  { id: 'mydlemms',  label: 'Mes dlemms', icon: IconList },
+  { id: 'activity',  label: 'Activité',   icon: IconList },
   { id: 'profile',   label: 'Profil',    icon: IconUser },
 ]
 
