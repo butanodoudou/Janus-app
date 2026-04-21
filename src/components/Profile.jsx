@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
-import { CATEGORIES } from '../data/questions.js'
+import { QUESTIONS, CATEGORIES } from '../data/questions.js'
 import { calcPct, calcStreak, STREAK_MILESTONES } from '../lib/utils.js'
 import { calcVoteBadge, calcContribBadge, getCategoryColor, CATEGORY_KEYS, LEVEL_DOTS } from '../lib/badges.js'
 import Comments from './Comments.jsx'
@@ -9,6 +9,7 @@ import AuthScreen from './AuthScreen.jsx'
 export default function Profile({ user, userId }) {
   const [stats, setStats] = useState(null)
   const [communityStats, setCommunityStats] = useState(null)
+  const [history, setHistory] = useState([])
   const [contribCounts, setContribCounts] = useState({})
   const [selectingBadge, setSelectingBadge] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
@@ -44,6 +45,14 @@ export default function Profile({ user, userId }) {
         const todayCount = (data || []).filter(v => v.date === TODAY).length
         const allDates = (data || []).map(v => v.date).filter(Boolean)
         setStats({ total, todayCount, streak: calcStreak(allDates) })
+
+        // Historique minimal pour le calcul des badges (pas besoin des counts)
+        const entries = (data || []).map(vote => {
+          const question = QUESTIONS.find(q => q.id === vote.question_id)
+          if (!question) return null
+          return { vote, question }
+        }).filter(Boolean)
+        setHistory(entries)
       }
     }
     load()
