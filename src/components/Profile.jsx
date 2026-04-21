@@ -14,6 +14,7 @@ export default function Profile({ user, userId }) {
   const [selected, setSelected] = useState(null)
   const [selectingBadge, setSelectingBadge] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
+  const [deleteStep, setDeleteStep] = useState(0) // 0=caché, 1=confirmation, 2=en cours, 3=erreur
 
   const username = user?.user_metadata?.username
   const selectedBadge = user?.user_metadata?.selected_badge || null
@@ -109,6 +110,20 @@ export default function Profile({ user, userId }) {
   const voteBadges = CATEGORY_KEYS.map(cat => calcVoteBadge(cat, history)).filter(Boolean)
   const contribBadges = CATEGORY_KEYS.map(cat => calcContribBadge(cat, contribCounts[cat] || 0)).filter(Boolean)
 
+  async function handleDeleteAccount() {
+    setDeleteStep(2)
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('https://ngoaeixwijvddkhqpcij.supabase.co/functions/v1/delete-account', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    })
+    if (res.ok) {
+      await supabase.auth.signOut()
+    } else {
+      setDeleteStep(3)
+    }
+  }
+
   async function handleSelectBadge(badge) {
     if (selectingBadge) return
     setSelectingBadge(true)
@@ -190,6 +205,13 @@ export default function Profile({ user, userId }) {
         <span style={styles.userIdLabel}>{user.email}</span>
         <span style={styles.userIdValue}>Copier</span>
       </button>
+
+      <DeleteAccountSection
+        step={deleteStep}
+        onStart={() => setDeleteStep(1)}
+        onConfirm={handleDeleteAccount}
+        onCancel={() => setDeleteStep(0)}
+      />
 
       {selected && (
         <DetailModal
@@ -482,6 +504,59 @@ function HistoryCard({ question, choice, counts, onTap }) {
       <p style={styles.tapHint}>Appuie pour voir les commentaires →</p>
     </button>
   )
+}
+
+function DeleteAccountSection({ step, onStart, onConfirm, onCancel }) {
+  if (step === 0) {
+    return (
+      <button style={deleteStyles.trigger} onClick={onStart}>
+        Supprimer mon compte et mes données
+      </button>
+    )
+  }
+  if (step === 1) {
+    return (
+      <div style={deleteStyles.box}>
+        <p style={deleteStyles.warning}>
+          ⚠️ Cette action est irréversible. Tous tes votes, soumissions et ton compte seront définitivement supprimés.
+        </p>
+        <div style={deleteStyles.btns}>
+          <button style={deleteStyles.cancelBtn} onClick={onCancel}>Annuler</button>
+          <button style={deleteStyles.confirmBtn} onClick={onConfirm}>Oui, supprimer</button>
+        </div>
+      </div>
+    )
+  }
+  if (step === 2) {
+    return <p style={deleteStyles.loading}>Suppression en cours…</p>
+  }
+  return <p style={deleteStyles.error}>Une erreur est survenue. Réessaie ou contacte le support.</p>
+}
+
+const deleteStyles = {
+  trigger: {
+    background: 'none', border: 'none', color: '#ccc', fontSize: '12px',
+    fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+    textDecoration: 'underline', alignSelf: 'center', padding: '4px 0',
+  },
+  box: {
+    background: '#fff', border: '1.5px solid #e53e3e22', borderRadius: '14px',
+    padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px',
+  },
+  warning: { fontSize: '13px', color: '#666', lineHeight: 1.5 },
+  btns: { display: 'flex', gap: '10px' },
+  cancelBtn: {
+    flex: 1, padding: '12px', background: '#f4f4f4', border: 'none',
+    borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer',
+    fontFamily: 'inherit', color: '#444',
+  },
+  confirmBtn: {
+    flex: 1, padding: '12px', background: '#e53e3e', border: 'none',
+    borderRadius: '10px', fontSize: '14px', fontWeight: 700, cursor: 'pointer',
+    fontFamily: 'inherit', color: '#fff',
+  },
+  loading: { fontSize: '13px', color: '#aaa', textAlign: 'center', padding: '8px 0' },
+  error: { fontSize: '13px', color: '#e53e3e', textAlign: 'center', padding: '8px 0' },
 }
 
 function StatCard({ label, value, accent }) {
