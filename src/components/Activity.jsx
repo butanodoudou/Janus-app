@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { QUESTIONS, CATEGORIES } from '../data/questions.js'
 import { calcPct } from '../lib/utils.js'
+import { shareResult } from '../lib/share.js'
 import Comments from './Comments.jsx'
 import AuthScreen from './AuthScreen.jsx'
 
@@ -246,58 +247,99 @@ function HistoryCard({ question, choice, counts, side, onTap }) {
 function DetailModal({ question, choice, counts, userId, onClose }) {
   const cat = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
   const { pctA, pctB, total } = calcPct(counts)
+  const [sharing, setSharing] = useState(false)
+  const [shareImageUrl, setShareImageUrl] = useState(null)
+
+  async function handleShare() {
+    if (sharing) return
+    setSharing(true)
+    const url = await shareResult({ question, counts, choice })
+    if (url) setShareImageUrl(url)
+    setSharing(false)
+  }
 
   return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modal} onClick={e => e.stopPropagation()}>
-        <div style={styles.handle} />
-        <div style={styles.modalScroll}>
-          <div style={styles.modalHeader}>
-            <span style={{ ...styles.badge, background: cat.color }}>{cat.label}</span>
-            <span style={{ fontSize: '13px', color: cat.color, fontWeight: 700 }}>
-              Tu as choisi {choice}
-            </span>
-          </div>
-          {question.text && <p style={styles.modalQuestion}>{question.text}</p>}
-          <div style={styles.modalBars}>
-            {[
-              { label: 'A', text: question.option_a, pct: pctA, chosen: choice === 'A' },
-              { label: 'B', text: question.option_b, pct: pctB, chosen: choice === 'B' },
-            ].map(opt => (
-              <div key={opt.label} style={{
-                ...styles.modalBar,
-                borderColor: opt.chosen ? cat.color : '#e5e5e5',
-                opacity: opt.chosen ? 1 : 0.6,
-              }}>
-                <div style={{
-                  position: 'absolute', inset: 0, borderRadius: '12px',
-                  width: `${opt.pct}%`, background: opt.chosen ? cat.color : '#f0f0f0',
-                  opacity: 0.15, transition: 'width 0.6s ease',
-                }} />
-                <span style={{
-                  ...styles.modalBarLabel,
-                  background: opt.chosen ? cat.color : '#e5e5e5',
-                  color: opt.chosen ? '#fff' : '#888',
-                }}>{opt.label}</span>
-                <span style={styles.modalBarText}>{opt.text}</span>
-                <span style={{ ...styles.modalBarPct, color: opt.chosen ? cat.color : '#bbb' }}>
-                  {opt.pct}%
+    <>
+      <div style={styles.overlay} onClick={onClose}>
+        <div style={styles.modal} onClick={e => e.stopPropagation()}>
+          <div style={styles.handle} />
+          <div style={styles.modalScroll}>
+            <div style={styles.modalHeader}>
+              <span style={{ ...styles.badge, background: cat.color }}>{cat.label}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '13px', color: cat.color, fontWeight: 700 }}>
+                  Tu as choisi {choice}
                 </span>
+                <button
+                  style={{ ...styles.shareBtn, opacity: sharing ? 0.5 : 1 }}
+                  onClick={handleShare}
+                  disabled={sharing}
+                  aria-label="Partager"
+                >
+                  {sharing ? '…' : <ShareIcon />}
+                </button>
               </div>
-            ))}
+            </div>
+            {question.text && <p style={styles.modalQuestion}>{question.text}</p>}
+            <div style={styles.modalBars}>
+              {[
+                { label: 'A', text: question.option_a, pct: pctA, chosen: choice === 'A' },
+                { label: 'B', text: question.option_b, pct: pctB, chosen: choice === 'B' },
+              ].map(opt => (
+                <div key={opt.label} style={{
+                  ...styles.modalBar,
+                  borderColor: opt.chosen ? cat.color : '#e5e5e5',
+                  opacity: opt.chosen ? 1 : 0.6,
+                }}>
+                  <div style={{
+                    position: 'absolute', inset: 0, borderRadius: '12px',
+                    width: `${opt.pct}%`, background: opt.chosen ? cat.color : '#f0f0f0',
+                    opacity: 0.15, transition: 'width 0.6s ease',
+                  }} />
+                  <span style={{
+                    ...styles.modalBarLabel,
+                    background: opt.chosen ? cat.color : '#e5e5e5',
+                    color: opt.chosen ? '#fff' : '#888',
+                  }}>{opt.label}</span>
+                  <span style={styles.modalBarText}>{opt.text}</span>
+                  <span style={{ ...styles.modalBarPct, color: opt.chosen ? cat.color : '#bbb' }}>
+                    {opt.pct}%
+                  </span>
+                </div>
+              ))}
+            </div>
+            <p style={styles.modalTotal}>
+              {total.toLocaleString('fr-FR')} personne{total > 1 ? 's' : ''} ont répondu
+            </p>
+            <Comments
+              questionId={question.id}
+              userChoice={choice}
+              categoryColor={cat.color}
+              userId={userId}
+            />
           </div>
-          <p style={styles.modalTotal}>
-            {total.toLocaleString('fr-FR')} personne{total > 1 ? 's' : ''} ont répondu
-          </p>
-          <Comments
-            questionId={question.id}
-            userChoice={choice}
-            categoryColor={cat.color}
-            userId={userId}
-          />
         </div>
       </div>
-    </div>
+
+      {shareImageUrl && (
+        <div style={styles.shareOverlay} onClick={() => setShareImageUrl(null)}>
+          <div style={styles.shareModal} onClick={e => e.stopPropagation()}>
+            <p style={styles.shareHint}>Appuie long sur l'image pour la sauvegarder</p>
+            <img src={shareImageUrl} alt="Carte d·lemm" style={styles.shareImage} />
+            <button style={styles.shareCloseBtn} onClick={() => setShareImageUrl(null)}>Fermer</button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+function ShareIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18" cy="5" r="3" /><circle cx="6" cy="12" r="3" /><circle cx="18" cy="19" r="3" />
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" /><line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+    </svg>
   )
 }
 
@@ -520,4 +562,29 @@ const styles = {
   modalBarText: { flex: 1, fontSize: '14px', fontWeight: 600, color: '#222', lineHeight: 1.4, zIndex: 1 },
   modalBarPct: { fontSize: '18px', fontWeight: 800, flexShrink: 0, zIndex: 1 },
   modalTotal: { fontSize: '13px', color: '#aaa', fontWeight: 600, textAlign: 'center' },
+
+  shareBtn: {
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: '30px', height: '30px', flexShrink: 0,
+    background: '#7F77DD', border: 'none', borderRadius: '8px',
+    color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
+    fontSize: '13px', fontWeight: 700,
+  },
+  shareOverlay: {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    zIndex: 400, padding: '24px',
+  },
+  shareModal: {
+    display: 'flex', flexDirection: 'column', alignItems: 'center',
+    gap: '16px', width: '100%', maxWidth: '380px',
+  },
+  shareHint: { fontSize: '14px', color: '#fff', fontWeight: 600, textAlign: 'center' },
+  shareImage: { width: '100%', borderRadius: '16px', boxShadow: '0 8px 40px rgba(0,0,0,0.4)' },
+  shareCloseBtn: {
+    padding: '12px 32px', background: 'rgba(255,255,255,0.15)',
+    border: '1.5px solid rgba(255,255,255,0.3)', borderRadius: '12px',
+    color: '#fff', fontSize: '14px', fontWeight: 700,
+    cursor: 'pointer', fontFamily: 'inherit',
+  },
 }

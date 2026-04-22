@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, memo, useMemo } from 'react'
-import html2canvas from 'html2canvas'
 import { supabase } from '../lib/supabase.js'
 import { CATEGORIES } from '../data/questions.js'
 import { calcPct } from '../lib/utils.js'
+import { shareResult } from '../lib/share.js'
 import Comments from './Comments.jsx'
-import ShareCard from './ShareCard.jsx'
 
 const TODAY = new Date().toISOString().slice(0, 10)
 const THRESHOLD = 90
@@ -18,7 +17,6 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
   const [dragX, setDragX] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const afterVoteRef = useRef(null)
-  const shareCardRef = useRef(null)
   const startXRef = useRef(null)
   const isDraggingRef = useRef(false)
   const currentDragXRef = useRef(0)
@@ -154,36 +152,9 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
   async function handleShare() {
     if (sharing) return
     setSharing(true)
-
-    // Native share en priorité (95% des mobiles)
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'd·lemm',
-          text: `${question.option_a} ou ${question.option_b} ?`,
-        })
-        setSharing(false)
-        return
-      } catch (e) {
-        if (e.name === 'AbortError') { setSharing(false); return }
-        // non supporté ou erreur → fallback canvas
-      }
-    }
-
-    // Fallback : génère une image partageable
-    try {
-      const canvas = await html2canvas(shareCardRef.current, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        useCORS: true,
-        logging: false,
-      })
-      setShareImageUrl(canvas.toDataURL('image/png'))
-    } catch {
-      navigator.clipboard?.writeText(`d·lemm — ${question.option_a} ou ${question.option_b} ?`)
-    } finally {
-      setSharing(false)
-    }
+    const url = await shareResult({ question, counts, choice: voted ? toRealChoice(voted) : 'A' })
+    if (url) setShareImageUrl(url)
+    setSharing(false)
   }
 
   const cardStyle = {
@@ -331,15 +302,10 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
         )}
       </div>
 
-      {/* Hidden share card */}
-      <div style={{ position: 'fixed', left: '-9999px', top: 0, pointerEvents: 'none' }}>
-        <ShareCard ref={shareCardRef} question={question} counts={counts} userChoice={voted} selectedBadge={userBadge} />
-      </div>
-
       {shareImageUrl && (
         <div style={styles.shareOverlay} onClick={() => setShareImageUrl(null)}>
           <div style={styles.shareModal} onClick={e => e.stopPropagation()}>
-            <p style={styles.shareHint}>Appuie long sur l'image pour la sauvegarder 👇</p>
+            <p style={styles.shareHint}>Appuie long sur l'image pour la sauvegarder</p>
             <img src={shareImageUrl} alt="Carte d·lemm" style={styles.shareImage} />
             <button style={styles.shareCloseBtn} onClick={() => setShareImageUrl(null)}>Fermer</button>
           </div>

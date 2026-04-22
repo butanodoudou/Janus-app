@@ -6,6 +6,8 @@ export const CATEGORIES = {
   travail:    { label: 'Travail',      color: '#1D9E75' },
   vie:        { label: 'Vie',          color: '#0F6E56' },
   superpower: { label: 'Super Pouvoir', color: '#E8640C' },
+  nourriture: { label: 'Nourriture',   color: '#D97706' },
+  culture:    { label: 'Culture',      color: '#0891B2' },
 }
 
 export const QUESTIONS = [
@@ -120,5 +122,95 @@ export const QUESTIONS = [
     text: "Tu guéris instantanément de tout, mais tu ressens deux fois plus la douleur avant de guérir.",
     option_a: "J'accepte.",
     option_b: "Je refuse.",
+  },
+
+  // ── Nourriture ────────────────────────────────────────────────────────────────
+
+  {
+    id: 'q17',
+    category: 'nourriture',
+    text: "Un choix alimentaire irrévocable s'impose à toi.",
+    option_a: "Pâtes à vie — sous toutes leurs formes.",
+    option_b: "Pizza à vie — sous toutes ses formes.",
+  },
+  {
+    id: 'q18',
+    category: 'nourriture',
+    text: "Ton cerveau doit choisir une seule direction gustative pour toujours.",
+    option_a: "Tu ne manges plus jamais sucré.",
+    option_b: "Tu ne manges plus jamais salé.",
+  },
+  {
+    id: 'q19',
+    category: 'nourriture',
+    text: "Un aliment fondamental disparaît de ton alimentation pour toujours.",
+    option_a: "Plus jamais de fromage sous aucune forme.",
+    option_b: "Plus jamais de chocolat sous aucune forme.",
+  },
+  {
+    id: 'q20',
+    category: 'nourriture',
+    text: "La façon dont tu manges est fixée définitivement.",
+    option_a: "Tu manges seul·e à chaque repas — mais exactement ce que tu veux.",
+    option_b: "Tu manges toujours en bonne compagnie — mais tu ne choisis jamais le menu.",
+  },
+  {
+    id: 'q23',
+    category: 'nourriture',
+    text: "Une seule fécule t'est autorisée pour toujours.",
+    option_a: "Pain — baguette, toast, brioche, tout y est.",
+    option_b: "Riz — blanc, sauté, risotto, tout y est.",
+  },
+  {
+    id: 'q26',
+    category: 'nourriture',
+    text: "Un pacte culinaire t'est imposé pour la vie.",
+    option_a: "Fast food illimité et gratuit — mais tu en manges obligatoirement une fois par semaine.",
+    option_b: "Plus jamais de fast food — mais chaque repas que tu fais toi-même est parfait.",
+  },
+
+  // ── Culture ───────────────────────────────────────────────────────────────────
+
+  {
+    id: 'q27',
+    category: 'culture',
+    text: "Un seul manga t'est autorisé pour le reste de ta vie.",
+    option_a: "One Piece — du début à la fin, en boucle autant que tu veux.",
+    option_b: "Naruto — du début à la fin, Shippuden inclus, en boucle autant que tu veux.",
+  },
+  {
+    id: 'q28',
+    category: 'culture',
+    text: "L'un de ces univers fictifs est effacé de ta vie pour toujours.",
+    option_a: "Harry Potter n'existe pas pour toi — livres, films, tout.",
+    option_b: "Le Seigneur des Anneaux n'existe pas pour toi — livres, films, tout.",
+  },
+  {
+    id: 'q29',
+    category: 'culture',
+    text: "Un format culturel disparaît définitivement de ta vie.",
+    option_a: "Tu ne lis plus jamais un seul livre.",
+    option_b: "Tu ne regardes plus jamais un seul film ni une seule série.",
+  },
+  {
+    id: 'q30',
+    category: 'culture',
+    text: "Ta façon de consommer les histoires est altérée définitivement.",
+    option_a: "Tu connais toujours la fin avant de commencer — livre, film ou série.",
+    option_b: "Tu oublies tout à la seconde où tu termines — chaque œuvre est toujours une découverte.",
+  },
+  {
+    id: 'q32',
+    category: 'culture',
+    text: "Une seule expression musicale t'est permise pour toujours.",
+    option_a: "Tu joues d'un instrument à la perfection — mais tu ne peux plus jamais chanter.",
+    option_b: "Tu chantes divinement bien — mais tu ne peux plus jamais jouer d'un instrument.",
+  },
+  {
+    id: 'q33',
+    category: 'culture',
+    text: "Un seul univers de super-héros subsiste pour toi.",
+    option_a: "Marvel — tous les films et séries, présents et futurs.",
+    option_b: "DC — tous les films et séries, présents et futurs.",
   },
 ]
