@@ -1,5 +1,5 @@
 import satori from 'satori'
-import { Resvg } from '@resvg/resvg-js'
+import sharp from 'sharp'
 
 export default async function handler(req, res) {
   const { searchParams } = new URL(req.url, `http://${req.headers.host}`)
@@ -99,10 +99,9 @@ export default async function handler(req, res) {
     fonts: fontData ? [{ name: 'Inter', data: fontData, weight: 600, style: 'normal' }] : [],
   })
 
-  const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: 1080 } })
-  const png = resvg.render().asPng()
+  const png = await sharp(Buffer.from(svg)).png().toBuffer()
 
   res.setHeader('Content-Type', 'image/png')
   res.setHeader('Cache-Control', 'public, max-age=86400, s-maxage=86400')
-  res.end(Buffer.from(png))
+  res.end(png)
 }

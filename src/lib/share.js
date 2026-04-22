@@ -25,17 +25,15 @@ export async function shareResult({ question, counts, choice }) {
     if (navigator.canShare?.({ files: [file] })) {
       await navigator.share({ files: [file], title: 'd·lemm' })
       return null
-    } else if (navigator.share) {
-      await navigator.share({ title: 'd·lemm', text: `${question.option_a} ou ${question.option_b} ?` })
-      return null
     }
+    // canShare non supporté → modal image (jamais du texte si l'API a marché)
     return ogUrl.toString()
   } catch (e) {
     if (e.name === 'AbortError') return null
+    // API indispo (dev) → dernier recours texte
     if (navigator.share) {
       try { await navigator.share({ title: 'd·lemm', text: `${question.option_a} ou ${question.option_b} ?` }) } catch {}
-      return null
     }
-    return ogUrl.toString()
+    return null
   }
 }
