@@ -48,10 +48,16 @@ export default async function handler(req) {
     >
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '60px' }}>
-        {/* d· logo mark */}
-        <div style={{ display: 'flex', alignItems: 'flex-end', lineHeight: '1' }}>
-          <span style={{ fontSize: '48px', fontWeight: 900, color: '#7F77DD', letterSpacing: '-3px', fontStyle: 'italic', lineHeight: '1' }}>d</span>
-          <span style={{ fontSize: '52px', fontWeight: 900, color: color, lineHeight: '0.8' }}>·</span>
+        {/* DIcon + wordmark */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <svg width="56" height="56" viewBox="0 0 80 80" fill="none">
+            <path d="M12 8 L12 72 L40 72 Q68 72 68 40 Q68 8 40 8 Z" fill="#7F77DD" />
+            <path d="M22 18 L22 62 L39 62 Q56 62 56 40 Q56 18 39 18 Z" fill="#fafafa" />
+            <line x1="8" y1="62" x2="72" y2="18" stroke="#fafafa" strokeWidth="5" strokeLinecap="round" />
+            <circle cx="40" cy="40" r="3" fill="#0e0e0e" />
+          </svg>
+          <div style={{ width: '2px', height: '32px', background: '#e5e5e5', flexShrink: 0, display: 'flex' }} />
+          <span style={{ fontSize: '42px', fontWeight: 900, color: '#0e0e0e', letterSpacing: '-2px', lineHeight: '1', fontFamily: 'system-ui' }}>lemm</span>
         </div>
         {/* Catégorie */}
         <div style={{

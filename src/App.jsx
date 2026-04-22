@@ -6,6 +6,7 @@ import Activity from './components/Activity.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
 import PinModal from './components/PinModal.jsx'
 import Nav from './components/Nav.jsx'
+import Logo from './components/Logo.jsx'
 import { supabase } from './lib/supabase.js'
 import { getUserId } from './lib/userId.js'
 
@@ -62,7 +63,7 @@ export default function App() {
   return (
     <div className="app">
       <header style={styles.header}>
-        <span style={styles.logo} onClick={handleLogoTap}>d·lemm</span>
+        <Logo onClick={handleLogoTap} size={28} />
       </header>
 
       {showPin && (
@@ -123,14 +124,6 @@ const styles = {
     position: 'sticky',
     top: 0,
     zIndex: 50,
-  },
-  logo: {
-    fontFamily: "'Unbounded', system-ui, sans-serif",
-    fontSize: '18px',
-    fontWeight: 800,
-    color: '#7F77DD',
-    letterSpacing: '-0.5px',
-    userSelect: 'none',
   },
   main: {
     flex: 1,
