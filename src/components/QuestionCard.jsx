@@ -397,8 +397,8 @@ function ChevronIcon() {
 
 const styles = {
   wrapper: {
-    minHeight: 'calc(100vh - 130px)',
-    padding: '20px 16px',
+    minHeight: 'calc(100svh - 130px)',
+    padding: '16px 16px',
     display: 'flex',
     flexDirection: 'column',
     animation: 'cardEnter 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -406,10 +406,10 @@ const styles = {
   card: {
     background: '#fff',
     borderRadius: '24px',
-    padding: '24px 20px',
+    padding: '20px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px',
+    gap: '16px',
     boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
     position: 'relative',
     overflow: 'hidden',
