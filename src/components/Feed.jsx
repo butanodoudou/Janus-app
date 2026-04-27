@@ -11,20 +11,25 @@ export default function Feed({ userId, isGuest, userBadge }) {
   const [votedIds, setVotedIds] = useState(null)
   const [allQuestions, setAllQuestions] = useState([])
   const [current, setCurrent] = useState(null)
+  const [featuredId, setFeaturedId] = useState(null)
   const [guestCount, setGuestCount] = useState(() =>
     isGuest ? parseInt(localStorage.getItem('dlemm_guest_count') || '0', 10) : 0
   )
 
   useEffect(() => {
     async function load() {
-      const [votesRes, submissionsRes] = await Promise.all([
+      const [votesRes, submissionsRes, featuredRes] = await Promise.all([
         supabase.from('votes').select('question_id').eq('user_id', userId),
         supabase.from('submissions').select('id, category, text, option_a, option_b').eq('status', 'approved').order('created_at', { ascending: true }),
+        supabase.from('featured_days').select('question_id').eq('date', TODAY).maybeSingle(),
       ])
 
       const ids = new Set()
       if (votesRes.data) votesRes.data.forEach(v => ids.add(v.question_id))
       setVotedIds(ids)
+
+      const todayFeaturedId = featuredRes.data?.question_id || null
+      setFeaturedId(todayFeaturedId)
 
       const approved = (submissionsRes.data || []).map(s => ({
         id: s.id,
@@ -40,6 +45,18 @@ export default function Feed({ userId, isGuest, userBadge }) {
         const j = Math.floor(Math.random() * (i + 1))
         ;[merged[i], merged[j]] = [merged[j], merged[i]]
       }
+
+      // Épingle le dlemm du jour en premier
+      if (todayFeaturedId) {
+        const idx = merged.findIndex(q => q.id === todayFeaturedId)
+        if (idx > 0) {
+          const [feat] = merged.splice(idx, 1)
+          merged.unshift({ ...feat, _featured: true })
+        } else if (idx === 0) {
+          merged[0] = { ...merged[0], _featured: true }
+        }
+      }
+
       setAllQuestions(merged)
     }
     load()

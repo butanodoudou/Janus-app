@@ -212,6 +212,11 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
           </>
         )}
 
+        {/* Dlemm du jour */}
+        {question._featured && (
+          <div style={styles.featuredBadge}>⭐ Dlemm du jour</div>
+        )}
+
         {/* Category */}
         <div style={{ ...styles.categoryBadge, background: category.color }}>
           {category.label}
@@ -433,6 +438,17 @@ const styles = {
     letterSpacing: '0.05em',
     pointerEvents: 'none',
     transition: 'opacity 0.1s',
+  },
+  featuredBadge: {
+    alignSelf: 'flex-start',
+    padding: '5px 12px',
+    borderRadius: '20px',
+    background: '#FFF8E7',
+    color: '#BA7517',
+    fontSize: '12px',
+    fontWeight: 700,
+    letterSpacing: '0.02em',
+    border: '1px solid #F6D860',
   },
   categoryBadge: {
     alignSelf: 'flex-start',

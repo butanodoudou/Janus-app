@@ -3,6 +3,25 @@ import { supabase } from '../lib/supabase.js'
 import { CATEGORIES } from '../data/questions.js'
 
 export default function AdminPanel() {
+  const [tab, setTab] = useState('moderation')
+
+  return (
+    <div style={styles.container}>
+      <h2 style={styles.heading}>Admin</h2>
+      <div style={styles.filters}>
+        <button style={{ ...styles.filterBtn, background: tab === 'moderation' ? '#7F77DD' : '#f0f0f0', color: tab === 'moderation' ? '#fff' : '#555' }} onClick={() => setTab('moderation')}>
+          Modération
+        </button>
+        <button style={{ ...styles.filterBtn, background: tab === 'programme' ? '#7F77DD' : '#f0f0f0', color: tab === 'programme' ? '#fff' : '#555' }} onClick={() => setTab('programme')}>
+          Dlemm du jour
+        </button>
+      </div>
+      {tab === 'moderation' ? <ModerationTab /> : <ProgrammeTab />}
+    </div>
+  )
+}
+
+function ModerationTab() {
   const [submissions, setSubmissions] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('pending')
@@ -28,9 +47,7 @@ export default function AdminPanel() {
   }
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.heading}>Modération</h2>
-
+    <div>
       <div style={styles.filters}>
         {['pending', 'approved', 'rejected'].map(f => (
           <button
@@ -70,6 +87,115 @@ export default function AdminPanel() {
       )}
     </div>
   )
+}
+
+function ProgrammeTab() {
+  const [approved, setApproved] = useState([])
+  const [scheduled, setScheduled] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedId, setSelectedId] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const TODAY = new Date().toISOString().slice(0, 10)
+
+  useEffect(() => {
+    async function load() {
+      const [subRes, featRes] = await Promise.all([
+        supabase.from('submissions').select('id, category, text, option_a, option_b').eq('status', 'approved').order('created_at', { ascending: false }),
+        supabase.from('featured_days').select('*').gte('date', TODAY).order('date'),
+      ])
+      setApproved(subRes.data || [])
+      setScheduled(featRes.data || [])
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  async function handleSchedule() {
+    if (!selectedDate || !selectedId) return
+    setSaving(true)
+    await supabase.from('featured_days').upsert({ date: selectedDate, question_id: selectedId }, { onConflict: 'date' })
+    const { data } = await supabase.from('featured_days').select('*').gte('date', TODAY).order('date')
+    setScheduled(data || [])
+    setSelectedDate('')
+    setSelectedId('')
+    setSaving(false)
+  }
+
+  async function handleDelete(date) {
+    await supabase.from('featured_days').delete().eq('date', date)
+    setScheduled(prev => prev.filter(s => s.date !== date))
+  }
+
+  if (loading) return <div style={styles.center}><div style={styles.loader} /></div>
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <p style={{ fontSize: '14px', fontWeight: 700, color: '#111' }}>Programmer un dlemm du jour</p>
+        <input
+          type="date"
+          value={selectedDate}
+          min={TODAY}
+          onChange={e => setSelectedDate(e.target.value)}
+          style={progStyles.input}
+        />
+        <select
+          value={selectedId}
+          onChange={e => setSelectedId(e.target.value)}
+          style={progStyles.input}
+        >
+          <option value="">Choisir un dlemm…</option>
+          {approved.map(s => (
+            <option key={s.id} value={s.id}>
+              {s.text || `${s.option_a} / ${s.option_b}`}
+            </option>
+          ))}
+        </select>
+        <button
+          style={{ ...styles.approveBtn, opacity: saving || !selectedDate || !selectedId ? 0.5 : 1 }}
+          onClick={handleSchedule}
+          disabled={saving || !selectedDate || !selectedId}
+        >
+          {saving ? 'Enregistrement…' : 'Programmer'}
+        </button>
+      </div>
+
+      {scheduled.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <p style={{ fontSize: '14px', fontWeight: 700, color: '#111' }}>Planifiés</p>
+          {scheduled.map(s => {
+            const q = approved.find(a => a.id === s.question_id)
+            return (
+              <div key={s.date} style={{ ...styles.card, flexDirection: 'row', alignItems: 'center', gap: '12px' }}>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: '12px', fontWeight: 700, color: '#7F77DD' }}>{s.date}</p>
+                  <p style={{ fontSize: '13px', color: '#444', marginTop: '2px' }}>
+                    {q ? (q.text || `${q.option_a} / ${q.option_b}`) : s.question_id}
+                  </p>
+                </div>
+                <button style={progStyles.deleteBtn} onClick={() => handleDelete(s.date)}>✕</button>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const progStyles = {
+  input: {
+    padding: '12px 14px', fontSize: '14px', fontFamily: 'inherit',
+    border: '2px solid #e5e5e5', borderRadius: '12px', background: '#fff',
+    color: '#111', width: '100%',
+  },
+  deleteBtn: {
+    background: 'none', border: '1px solid #eee', borderRadius: '8px',
+    padding: '6px 10px', cursor: 'pointer', color: '#aaa', fontSize: '13px',
+    fontFamily: 'inherit', flexShrink: 0,
+  },
 }
 
 function SubmissionCard({ submission: s, filter, onApprove, onReject }) {
