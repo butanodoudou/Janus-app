@@ -2,6 +2,7 @@
 
 ## À faire maintenant (bêta)
 
+- [ ] **Clarté des dlemms** — certains dlemms sont flous et les désavantages de chaque option ne sont pas assez explicites. Passe orthographique + reformulation avant lancement alpha (via LLM ou à la main)
 - [x] **Réactions rapides** — 5 emojis post-vote (😱 🤔 😈 🫶 🤯), agrégat affiché sous les %
 
 - [x] **Contenu** — ~30 dlemms en base, suffisant pour la bêta. Les testeurs soumettront leurs propres dlemms.
