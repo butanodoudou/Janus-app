@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase.js'
 const TODAY = new Date().toISOString().slice(0, 10)
 const GUEST_LIMIT = 5
 
-export default function Feed({ userId, isGuest, userBadge }) {
+export default function Feed({ userId, isGuest, userBadge, deepLinkId }) {
   const [votedIds, setVotedIds] = useState(null)
   const [allQuestions, setAllQuestions] = useState([])
   const [current, setCurrent] = useState(null)
@@ -65,7 +65,9 @@ export default function Feed({ userId, isGuest, userBadge }) {
   // Initialise la question courante une fois les données chargées
   useEffect(() => {
     if (allQuestions.length > 0 && votedIds !== null && !current) {
-      const first = allQuestions.find(q => !votedIds.has(q.id))
+      const linked = deepLinkId && allQuestions.find(q => q.id === deepLinkId)
+      const first = (linked && !votedIds.has(linked.id) ? linked : null)
+        ?? allQuestions.find(q => !votedIds.has(q.id))
       if (first) setCurrent(first)
     }
   }, [allQuestions, votedIds])

@@ -16,6 +16,7 @@ export default function App() {
   const [session, setSession] = useState(undefined)
   const [view, setView] = useState('feed')
   const [reformulateData, setReformulateData] = useState(null)
+  const [deepLinkId] = useState(() => new URLSearchParams(window.location.search).get('q'))
   const [tapCount, setTapCount] = useState(0)
   const [showPin, setShowPin] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -75,7 +76,7 @@ export default function App() {
 
       <main style={styles.main}>
         <div key={view} style={{ animation: 'fadeIn 0.18s ease-out' }}>
-          {view === 'feed' && <Feed userId={userId} isGuest={isGuest} userBadge={userBadge} />}
+          {view === 'feed' && <Feed userId={userId} isGuest={isGuest} userBadge={userBadge} deepLinkId={deepLinkId} />}
           {view === 'submit' && (
             <SubmitForm
               userId={userId}

@@ -23,7 +23,11 @@ export async function shareResult({ question, counts, choice }) {
     const file = new File([blob], 'dlemm.png', { type: 'image/png' })
 
     if (navigator.canShare?.({ files: [file] })) {
-      await navigator.share({ files: [file], title: 'd·lemm' })
+      await navigator.share({
+        files: [file],
+        title: 'd·lemm',
+        url: `${window.location.origin}?q=${question.id}`,
+      })
       return null
     }
     // canShare non supporté → modal image (jamais du texte si l'API a marché)
@@ -36,7 +40,7 @@ export async function shareResult({ question, counts, choice }) {
         await navigator.share({
           title: 'd·lemm — ' + (question.text || 'Un dlemm sans bonne réponse'),
           text: `${question.option_a} ou ${question.option_b} ?`,
-          url: window.location.origin,
+          url: `${window.location.origin}?q=${question.id}`,
         })
       } catch {}
     }
