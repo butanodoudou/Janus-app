@@ -6,7 +6,7 @@
 
 - [ ] **Contenu** — générer 30-40 dlemms via Claude + injection SQL pour avoir un vrai feed
 
-- [ ] **OG image** — convertir `/public/og-image.svg` en `/public/og-image.png`
+- [x] **OG image** — convertir `/public/og-image.svg` en `/public/og-image.png`
 
 ## MCP Supabase
 
