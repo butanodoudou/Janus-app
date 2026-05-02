@@ -61,7 +61,6 @@ export default function Activity({ user, userId, onReformulate }) {
 function ResponsesTab({ userId }) {
   const [history, setHistory] = useState(null)
   const [selected, setSelected] = useState(null)
-  const [catFilter, setCatFilter] = useState('all')
   const [sideFilter, setSideFilter] = useState('all')
 
   useEffect(() => {
@@ -74,7 +73,6 @@ function ResponsesTab({ userId }) {
 
       if (!votes?.length) { setHistory([]); return }
 
-      // Charger les soumissions approuvées pour les votes sur IDs UUID
       const unknownIds = votes.map(v => v.question_id).filter(id => !QUESTIONS.find(q => q.id === id))
       let approvedSubs = []
       if (unknownIds.length > 0) {
@@ -87,7 +85,6 @@ function ResponsesTab({ userId }) {
       }
       const allQuestions = [...QUESTIONS, ...approvedSubs]
 
-      // Comptes de votes par question
       const qIds = [...new Set(votes.map(v => v.question_id))]
       const { data: allVotes } = await supabase
         .from('votes')
@@ -119,38 +116,11 @@ function ResponsesTab({ userId }) {
     return <div style={styles.center}><div style={styles.loader} /></div>
   }
 
-  // Filtrage
-  const categories = [...new Set(history.map(e => e.question.category))]
   let filtered = history
-  if (catFilter !== 'all') filtered = filtered.filter(e => e.question.category === catFilter)
   if (sideFilter !== 'all') filtered = filtered.filter(e => e.side === sideFilter)
 
   return (
     <>
-      {/* Filtre catégorie */}
-      <div style={styles.filterRow}>
-        <button
-          style={{ ...styles.catChip, ...(catFilter === 'all' ? styles.catChipActive('#7F77DD') : {}) }}
-          onClick={() => setCatFilter('all')}
-        >
-          Toutes
-        </button>
-        {categories.map(cat => {
-          const c = CATEGORIES[cat] || { label: cat, color: '#7F77DD' }
-          const active = catFilter === cat
-          return (
-            <button
-              key={cat}
-              style={{ ...styles.catChip, ...(active ? styles.catChipActive(c.color) : {}) }}
-              onClick={() => setCatFilter(active ? 'all' : cat)}
-            >
-              {c.label}
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Filtre majorité / minorité */}
       <div style={styles.sideFilterRow}>
         {SIDE_FILTERS.map(f => (
           <button
@@ -205,41 +175,42 @@ function HistoryCard({ question, choice, counts, side, onTap }) {
   const { pctA, pctB, total } = calcPct(counts)
   const chosenPct = choice === 'A' ? pctA : pctB
   const otherPct  = choice === 'A' ? pctB : pctA
+  const isMajority = side === 'majority'
 
   return (
     <button style={styles.historyCard} onClick={onTap}>
       <div style={styles.historyTop}>
-        <span style={{ ...styles.badge, background: cat.color }}>{cat.label}</span>
-        <div style={styles.historyRight}>
-          <span style={styles.historyTotal}>{total.toLocaleString('fr-FR')} votes</span>
+        <div style={styles.historyTopLeft}>
+          <span style={{ ...styles.badge, background: cat.color }}>{cat.label}</span>
           <span style={{
             ...styles.sidePill,
-            background: side === 'majority' ? '#e8f7f1' : '#fff0f3',
-            color:      side === 'majority' ? '#1D9E75' : '#D4537E',
+            background: isMajority ? '#e8f7f1' : '#fff0f3',
+            color:      isMajority ? '#1D9E75' : '#D4537E',
           }}>
-            {side === 'majority' ? 'Majorité' : 'Minorité'}
+            {isMajority ? 'Majorité' : 'Minorité'}
           </span>
         </div>
+        <span style={styles.historyTotal}>{total.toLocaleString('fr-FR')} votes</span>
       </div>
 
       {question.text && <p style={styles.historyQuestion}>{question.text}</p>}
 
-      <div style={styles.barRow}>
-        <span style={styles.barLabel}>{choice}</span>
-        <div style={styles.barTrack}>
-          <div style={{ ...styles.barFill, width: `${chosenPct}%`, background: cat.color }} />
+      <div style={styles.barsBlock}>
+        <div style={styles.barRow}>
+          <span style={{ ...styles.barLabel, color: cat.color }}>{choice}</span>
+          <div style={styles.barTrack}>
+            <div style={{ ...styles.barFill, width: `${chosenPct}%`, background: cat.color }} />
+          </div>
+          <span style={{ ...styles.barPct, color: cat.color }}>{chosenPct}%</span>
         </div>
-        <span style={{ ...styles.barPct, color: cat.color }}>{chosenPct}%</span>
-      </div>
-      <div style={styles.barRow}>
-        <span style={styles.barLabel}>{choice === 'A' ? 'B' : 'A'}</span>
-        <div style={styles.barTrack}>
-          <div style={{ ...styles.barFill, width: `${otherPct}%`, background: '#e0e0e0' }} />
+        <div style={styles.barRow}>
+          <span style={styles.barLabel}>{choice === 'A' ? 'B' : 'A'}</span>
+          <div style={styles.barTrack}>
+            <div style={{ ...styles.barFill, width: `${otherPct}%`, background: '#e0e0e0' }} />
+          </div>
+          <span style={{ ...styles.barPct, color: '#bbb' }}>{otherPct}%</span>
         </div>
-        <span style={{ ...styles.barPct, color: '#aaa' }}>{otherPct}%</span>
       </div>
-
-      <p style={styles.tapHint}>Appuie pour voir les commentaires →</p>
     </button>
   )
 }
@@ -458,18 +429,6 @@ const styles = {
     transition: 'color 0.15s, border-color 0.15s',
   },
 
-  filterRow: {
-    display: 'flex', gap: '8px', flexWrap: 'wrap',
-  },
-  catChip: {
-    padding: '6px 12px', borderRadius: '20px', border: '1.5px solid #e5e5e5',
-    background: '#fff', fontSize: '12px', fontWeight: 700, cursor: 'pointer',
-    fontFamily: 'inherit', color: '#666', transition: 'all 0.15s',
-  },
-  catChipActive: color => ({
-    background: color, borderColor: color, color: '#fff',
-  }),
-
   sideFilterRow: { display: 'flex', alignItems: 'center', gap: '8px' },
   sideBtn: {
     padding: '6px 14px', borderRadius: '20px', border: 'none',
@@ -505,7 +464,7 @@ const styles = {
     fontFamily: 'inherit', width: '100%',
   },
   historyTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  historyRight: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' },
+  historyTopLeft: { display: 'flex', alignItems: 'center', gap: '6px' },
   historyTotal: { fontSize: '11px', color: '#bbb', fontWeight: 600 },
   sidePill: {
     fontSize: '10px', fontWeight: 700, padding: '2px 8px',
@@ -513,12 +472,12 @@ const styles = {
   },
   badge: { padding: '3px 10px', borderRadius: '20px', color: '#fff', fontSize: '11px', fontWeight: 700 },
   historyQuestion: { fontSize: '14px', fontWeight: 700, color: '#111', lineHeight: 1.4 },
+  barsBlock: { display: 'flex', flexDirection: 'column', gap: '6px' },
   barRow: { display: 'flex', alignItems: 'center', gap: '8px' },
   barLabel: { fontSize: '12px', fontWeight: 800, color: '#888', width: '14px', flexShrink: 0 },
   barTrack: { flex: 1, height: '6px', background: '#f0f0f0', borderRadius: '3px', overflow: 'hidden' },
   barFill: { height: '100%', borderRadius: '3px', transition: 'width 0.6s ease' },
   barPct: { fontSize: '12px', fontWeight: 700, width: '32px', textAlign: 'right', flexShrink: 0 },
-  tapHint: { fontSize: '11px', color: '#ccc', textAlign: 'right', marginTop: '-4px' },
 
   subCard: {
     background: '#fff', borderRadius: '16px', padding: '16px',

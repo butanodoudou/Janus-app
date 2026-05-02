@@ -274,6 +274,9 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
                 </span>
                 {' '}des gens ont choisi comme toi · {total.toLocaleString('fr-FR')} votes
               </p>
+
+              <ReactionsRow questionId={question.id} userId={userId} />
+
               <div style={styles.actionBtns}>
                 <button
                   style={{ ...styles.shareBtn, opacity: sharing ? 0.6 : 1 }}
@@ -318,6 +321,86 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
       )}
     </div>
   )
+}
+
+const REACTION_EMOJIS = ['😱', '🤔', '😈', '🫶', '🤯']
+
+function ReactionsRow({ questionId, userId }) {
+  const [counts, setCounts] = useState({})
+  const [selected, setSelected] = useState(null)
+
+  useEffect(() => {
+    async function load() {
+      const [aggRes, userRes] = await Promise.all([
+        supabase.from('reactions').select('emoji').eq('question_id', questionId),
+        supabase.from('reactions').select('emoji').eq('question_id', questionId).eq('user_id', userId).maybeSingle(),
+      ])
+      const c = {}
+      for (const r of aggRes.data || []) c[r.emoji] = (c[r.emoji] || 0) + 1
+      setCounts(c)
+      if (userRes.data) setSelected(userRes.data.emoji)
+    }
+    load()
+  }, [questionId])
+
+  async function handleReaction(emoji) {
+    const prev = selected
+    if (emoji === prev) {
+      setSelected(null)
+      setCounts(c => ({ ...c, [emoji]: Math.max(0, (c[emoji] || 1) - 1) }))
+      await supabase.from('reactions').delete().eq('user_id', userId).eq('question_id', questionId)
+    } else {
+      setSelected(emoji)
+      setCounts(c => {
+        const next = { ...c, [emoji]: (c[emoji] || 0) + 1 }
+        if (prev) next[prev] = Math.max(0, (c[prev] || 1) - 1)
+        return next
+      })
+      await supabase.from('reactions').upsert(
+        { user_id: userId, question_id: questionId, emoji },
+        { onConflict: 'user_id,question_id' }
+      )
+    }
+  }
+
+  return (
+    <div style={reactionStyles.row}>
+      {REACTION_EMOJIS.map(emoji => {
+        const count = counts[emoji] || 0
+        const active = selected === emoji
+        return (
+          <button
+            key={emoji}
+            style={{
+              ...reactionStyles.btn,
+              background: active ? '#f0effe' : '#f4f4f4',
+              border: `1.5px solid ${active ? '#7F77DD' : 'transparent'}`,
+              transform: active ? 'scale(1.1)' : 'scale(1)',
+            }}
+            onClick={() => handleReaction(emoji)}
+          >
+            <span style={{ fontSize: '20px', lineHeight: 1 }}>{emoji}</span>
+            {count > 0 && <span style={{ ...reactionStyles.count, color: active ? '#7F77DD' : '#aaa' }}>{count}</span>}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+const reactionStyles = {
+  row: {
+    display: 'flex', gap: '8px', justifyContent: 'center',
+  },
+  btn: {
+    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px',
+    padding: '8px 10px', borderRadius: '12px', cursor: 'pointer',
+    fontFamily: 'inherit', transition: 'transform 0.15s, background 0.15s, border-color 0.15s',
+    minWidth: '48px',
+  },
+  count: {
+    fontSize: '11px', fontWeight: 700, lineHeight: 1,
+  },
 }
 
 const ResultBar = memo(function ResultBar({ label, text, pct, chosen, color }) {
