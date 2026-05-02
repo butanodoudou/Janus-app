@@ -30,9 +30,15 @@ export async function shareResult({ question, counts, choice }) {
     return ogUrl.toString()
   } catch (e) {
     if (e.name === 'AbortError') return null
-    // API indispo (dev) → dernier recours texte
+    // API indispo → partage l'URL de l'app (WhatsApp affiche le preview OG)
     if (navigator.share) {
-      try { await navigator.share({ title: 'd·lemm', text: `${question.option_a} ou ${question.option_b} ?` }) } catch {}
+      try {
+        await navigator.share({
+          title: 'd·lemm — ' + (question.text || 'Un dlemm sans bonne réponse'),
+          text: `${question.option_a} ou ${question.option_b} ?`,
+          url: window.location.origin,
+        })
+      } catch {}
     }
     return null
   }
