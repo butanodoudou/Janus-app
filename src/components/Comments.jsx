@@ -32,7 +32,6 @@ export default function Comments({ questionId, userChoice, categoryColor, userId
       .order('created_at', { ascending: true })
 
     if (data) {
-      // Imbrique les réponses sous leurs parents
       const roots = []
       const map = {}
       data.forEach(c => { map[c.id] = { ...c, replies: [] } })

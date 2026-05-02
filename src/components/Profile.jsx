@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { QUESTIONS, CATEGORIES } from '../data/questions.js'
-import { calcPct, calcStreak, STREAK_MILESTONES } from '../lib/utils.js'
+import { calcStreak, STREAK_MILESTONES } from '../lib/utils.js'
 import { calcVoteBadge, calcContribBadge, getCategoryColor, CATEGORY_KEYS, LEVEL_DOTS } from '../lib/badges.js'
-import Comments from './Comments.jsx'
 import AuthScreen from './AuthScreen.jsx'
 
 export default function Profile({ user, userId }) {
@@ -346,109 +345,6 @@ function BadgePill({ badge, selected, onSelect }) {
   )
 }
 
-function DetailModal({ question, choice, counts, userId, onClose }) {
-  const cat = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
-  const { pctA, pctB, total } = calcPct(counts)
-
-  return (
-    <div style={styles.overlay} onClick={onClose}>
-      <div style={styles.modal} onClick={e => e.stopPropagation()}>
-        <div style={styles.handle} />
-        <div style={styles.modalScroll}>
-          <div style={styles.modalHeader}>
-            <span style={{ ...styles.badge, background: cat.color }}>{cat.label}</span>
-            <span style={{ fontSize: '13px', color: cat.color, fontWeight: 700 }}>
-              Tu as choisi {choice}
-            </span>
-          </div>
-
-          {question.text && <p style={styles.modalQuestion}>{question.text}</p>}
-
-          <div style={styles.modalBars}>
-            {[
-              { label: 'A', text: question.option_a, pct: pctA, chosen: choice === 'A' },
-              { label: 'B', text: question.option_b, pct: pctB, chosen: choice === 'B' },
-            ].map(opt => (
-              <div key={opt.label} style={{
-                ...styles.modalBar,
-                borderColor: opt.chosen ? cat.color : '#e5e5e5',
-                opacity: opt.chosen ? 1 : 0.6,
-              }}>
-                <div style={{
-                  position: 'absolute', inset: 0, borderRadius: '12px',
-                  width: `${opt.pct}%`,
-                  background: opt.chosen ? cat.color : '#f0f0f0',
-                  opacity: 0.15,
-                  transition: 'width 0.6s ease',
-                }} />
-                <span style={{
-                  ...styles.modalBarLabel,
-                  background: opt.chosen ? cat.color : '#e5e5e5',
-                  color: opt.chosen ? '#fff' : '#888',
-                }}>{opt.label}</span>
-                <span style={styles.modalBarText}>{opt.text}</span>
-                <span style={{ ...styles.modalBarPct, color: opt.chosen ? cat.color : '#bbb' }}>
-                  {opt.pct}%
-                </span>
-              </div>
-            ))}
-          </div>
-
-          <p style={styles.modalTotal}>
-            {total.toLocaleString('fr-FR')} personne{total > 1 ? 's' : ''} ont répondu
-          </p>
-
-          <Comments
-            questionId={question.id}
-            userChoice={choice}
-            categoryColor={cat.color}
-            userId={userId}
-          />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function HistoryCard({ question, choice, counts, onTap }) {
-  const cat = CATEGORIES[question.category] || { label: question.category, color: '#7F77DD' }
-  const { pctA, pctB, total } = calcPct(counts)
-  const chosenPct = choice === 'A' ? pctA : pctB
-  const otherPct = choice === 'A' ? pctB : pctA
-
-  return (
-    <button style={styles.historyCard} onClick={onTap}>
-      <div style={styles.historyCardTop}>
-        <span style={{ ...styles.badge, background: cat.color }}>{cat.label}</span>
-        <div style={styles.historyCardRight}>
-          <span style={styles.historyTotal}>{total.toLocaleString('fr-FR')} votes</span>
-          <span style={{ ...styles.choiceLetter, color: cat.color }}>Choix {choice}</span>
-        </div>
-      </div>
-
-      {question.text && <p style={styles.historyQuestion}>{question.text}</p>}
-
-      <div style={styles.barRow}>
-        <span style={styles.barLabel}>{choice}</span>
-        <div style={styles.barTrack}>
-          <div style={{ ...styles.barFill, width: `${chosenPct}%`, background: cat.color }} />
-        </div>
-        <span style={{ ...styles.barPct, color: cat.color }}>{chosenPct}%</span>
-      </div>
-
-      <div style={styles.barRow}>
-        <span style={styles.barLabel}>{choice === 'A' ? 'B' : 'A'}</span>
-        <div style={styles.barTrack}>
-          <div style={{ ...styles.barFill, width: `${otherPct}%`, background: '#e0e0e0' }} />
-        </div>
-        <span style={{ ...styles.barPct, color: '#aaa' }}>{otherPct}%</span>
-      </div>
-
-      <p style={styles.tapHint}>Appuie pour voir les commentaires →</p>
-    </button>
-  )
-}
-
 function DeleteAccountSection({ step, onStart, onConfirm, onCancel }) {
   if (step === 0) {
     return (
@@ -580,28 +476,7 @@ const styles = {
   badgesEmpty: { fontSize: '13px', color: '#aaa', fontWeight: 500 },
   badgesHint: { fontSize: '11px', color: '#ccc', fontWeight: 500, textAlign: 'center', margin: 0 },
 
-  // History
-  historySection: { display: 'flex', flexDirection: 'column', gap: '14px' },
   historyHeading: { fontSize: '18px', fontWeight: 800, color: '#111', margin: 0 },
-  historyList: { display: 'flex', flexDirection: 'column', gap: '12px' },
-  historyCard: {
-    background: '#fff', borderRadius: '16px', padding: '16px',
-    display: 'flex', flexDirection: 'column', gap: '10px',
-    border: '1px solid #eee', cursor: 'pointer', textAlign: 'left',
-    fontFamily: 'inherit', width: '100%',
-  },
-  historyCardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  historyCardRight: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' },
-  historyTotal: { fontSize: '11px', color: '#bbb', fontWeight: 600 },
-  badge: { padding: '3px 10px', borderRadius: '20px', color: '#fff', fontSize: '11px', fontWeight: 700 },
-  choiceLetter: { fontSize: '13px', fontWeight: 700 },
-  historyQuestion: { fontSize: '14px', fontWeight: 700, color: '#111', lineHeight: 1.4 },
-  barRow: { display: 'flex', alignItems: 'center', gap: '8px' },
-  barLabel: { fontSize: '12px', fontWeight: 800, color: '#888', width: '14px', flexShrink: 0 },
-  barTrack: { flex: 1, height: '6px', background: '#f0f0f0', borderRadius: '3px', overflow: 'hidden' },
-  barFill: { height: '100%', borderRadius: '3px', transition: 'width 0.6s ease' },
-  barPct: { fontSize: '12px', fontWeight: 700, width: '32px', textAlign: 'right', flexShrink: 0 },
-  tapHint: { fontSize: '11px', color: '#ccc', textAlign: 'right', marginTop: '-4px' },
   userId: {
     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
     padding: '12px 16px', background: '#fff', borderRadius: '12px',
@@ -609,40 +484,4 @@ const styles = {
   },
   userIdLabel: { fontSize: '13px', color: '#888', fontWeight: 500 },
   userIdValue: { fontSize: '12px', color: '#aaa', fontFamily: 'monospace' },
-
-  // Modale
-  overlay: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-    display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 200,
-  },
-  modal: {
-    width: '100%', maxWidth: '430px', background: '#fafafa',
-    borderRadius: '20px 20px 0 0', maxHeight: '88vh',
-    display: 'flex', flexDirection: 'column',
-  },
-  handle: {
-    width: '36px', height: '4px', background: '#ddd',
-    borderRadius: '2px', margin: '12px auto 4px', flexShrink: 0,
-  },
-  modalScroll: {
-    overflowY: 'auto', padding: '12px 20px 40px',
-    display: 'flex', flexDirection: 'column', gap: '16px',
-  },
-  modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  modalQuestion: { fontSize: '20px', fontWeight: 800, color: '#111', lineHeight: 1.3 },
-  modalBars: { display: 'flex', flexDirection: 'column', gap: '10px' },
-  modalBar: {
-    position: 'relative', overflow: 'hidden',
-    display: 'flex', alignItems: 'center', gap: '12px',
-    padding: '14px', background: '#fff', border: '2px solid',
-    borderRadius: '12px', minHeight: '64px',
-  },
-  modalBarLabel: {
-    flexShrink: 0, width: '30px', height: '30px', borderRadius: '8px',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: '13px', fontWeight: 800, zIndex: 1,
-  },
-  modalBarText: { flex: 1, fontSize: '14px', fontWeight: 600, color: '#222', lineHeight: 1.4, zIndex: 1 },
-  modalBarPct: { fontSize: '18px', fontWeight: 800, flexShrink: 0, zIndex: 1 },
-  modalTotal: { fontSize: '13px', color: '#aaa', fontWeight: 600, textAlign: 'center' },
 }

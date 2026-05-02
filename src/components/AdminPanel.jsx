@@ -59,7 +59,7 @@ function ModerationTab() {
             }}
             onClick={() => setFilter(f)}
           >
-            {f === 'pending' ? 'En attente' : f === 'approved' ? 'Publiés' : 'Refusés'}
+            {{ pending: 'En attente', approved: 'Publiés', rejected: 'Refusés' }[f]}
           </button>
         ))}
       </div>

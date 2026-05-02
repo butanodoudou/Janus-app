@@ -5,7 +5,6 @@ import { calcPct } from '../lib/utils.js'
 import { shareResult } from '../lib/share.js'
 import Comments from './Comments.jsx'
 
-const TODAY = new Date().toISOString().slice(0, 10)
 const THRESHOLD = 90
 
 export default function QuestionCard({ question, userId, userBadge, onVoted, onNext }) {
@@ -73,7 +72,7 @@ export default function QuestionCard({ question, userId, userBadge, onVoted, onN
       user_id: userId,
       question_id: question.id,
       choice: realChoice,
-      date: TODAY,
+      date: new Date().toISOString().slice(0, 10),
     })
 
     const { data } = await supabase

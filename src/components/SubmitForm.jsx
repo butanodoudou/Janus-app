@@ -76,7 +76,7 @@ export default function SubmitForm({ userId, onBack, initialData = null, editId 
             <div key={i} style={styles.stepItem}>
               <div style={{
                 ...styles.stepNum,
-                background: i < step ? '#7F77DD' : i === step ? '#7F77DD' : '#e5e5e5',
+                background: i <= step ? '#7F77DD' : '#e5e5e5',
                 color: i <= step ? '#fff' : '#aaa',
               }}>
                 {i < step ? '✓' : i + 1}

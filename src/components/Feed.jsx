@@ -4,7 +4,6 @@ import AuthScreen from './AuthScreen.jsx'
 import { QUESTIONS } from '../data/questions.js'
 import { supabase } from '../lib/supabase.js'
 
-const TODAY = new Date().toISOString().slice(0, 10)
 const GUEST_LIMIT = 5
 
 export default function Feed({ userId, isGuest, userBadge, deepLinkId }) {
@@ -18,10 +17,11 @@ export default function Feed({ userId, isGuest, userBadge, deepLinkId }) {
 
   useEffect(() => {
     async function load() {
+      const today = new Date().toISOString().slice(0, 10)
       const [votesRes, submissionsRes, featuredRes] = await Promise.all([
         supabase.from('votes').select('question_id').eq('user_id', userId),
         supabase.from('submissions').select('id, category, text, option_a, option_b').eq('status', 'approved').order('created_at', { ascending: true }),
-        supabase.from('featured_days').select('question_id').eq('date', TODAY).maybeSingle(),
+        supabase.from('featured_days').select('question_id').eq('date', today).maybeSingle(),
       ])
 
       const ids = new Set()
