@@ -2,9 +2,7 @@
 
 ## À faire maintenant (bêta)
 
-- [ ] **Réactions rapides** — 5 emojis post-vote (😱 😈 🤔 🫶 🤯), agrégat affiché sous les %
-  - Table `reactions` : `user_id, question_id, emoji` — unique par (user_id, question_id)
-  - 1 réaction par user par question, modifiable (re-tap = change)
+- [x] **Réactions rapides** — 5 emojis post-vote (😱 🤔 😈 🫶 🤯), agrégat affiché sous les %
 
 - [ ] **Contenu** — générer 30-40 dlemms via Claude + injection SQL pour avoir un vrai feed
 
