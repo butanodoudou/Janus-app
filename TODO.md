@@ -4,7 +4,7 @@
 
 - [x] **Réactions rapides** — 5 emojis post-vote (😱 🤔 😈 🫶 🤯), agrégat affiché sous les %
 
-- [ ] **Contenu** — générer 30-40 dlemms via Claude + injection SQL pour avoir un vrai feed
+- [x] **Contenu** — ~30 dlemms en base, suffisant pour la bêta. Les testeurs soumettront leurs propres dlemms.
 
 - [x] **OG image** — convertir `/public/og-image.svg` en `/public/og-image.png`
 
